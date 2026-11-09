@@ -303,7 +303,7 @@
       <div class="rule"><span class="k">01</span><p id="rule1">A question comes up and the number starts climbing right away. Read fast.</p></div>
       <div class="rule"><span class="k">02</span><p>First to tap at or past the answer wins the round. Within 1.5 seconds of the exact number is a <b>bullseye: double points.</b></p></div>
       <div class="rule"><span class="k">03</span><p>Too early? The button says so and keeps counting. Try again.</p></div>
-      <div class="rule"><span class="k">04</span><p>If the count reaches <b>double the answer</b>, the round is dead and nobody scores. Don't sit on it.</p></div>
+      <div class="rule"><span class="k">04</span><p>If the count reaches <b>double the answer</b> (and at least 10 seconds have gone by), the round is dead and nobody scores. Don't sit on it.</p></div>
       <div class="rule"><span class="k">05</span><p>Win a round, get an emoji. Ten rounds. Most points wins.</p></div>
     </div>
     <div class="stack">
@@ -350,7 +350,6 @@
   <section class="screen" id="screen-round" hidden>
     <div class="qcard">
       <p class="question" id="qText"></p>
-      <div class="qband"><span id="qBand">Question 1</span><span>Perfect Timing</span></div>
     </div>
     <div class="stage">
       <div class="badge" id="badge" aria-live="assertive">Too early</div>
@@ -359,7 +358,7 @@
         <span class="sub" id="sub">the count</span>
       </button>
     </div>
-    <button class="link" id="giveUp" type="button" hidden>Nobody's getting this one</button>
+    <button class="link" id="giveUp" type="button" hidden>Everyone missed</button>
   </section>
 
   <!-- RESULT -->
@@ -456,6 +455,7 @@
   const T_MIN = 3;              // seconds until the count reaches the answer: drawn evenly from this range,
   const T_MAX = 30;             // so some rounds are over as you finish reading and some crawl for half a minute
   const BULLSEYE_SECS = 1.5;    // tap within this many seconds of the exact number for double points
+  const DEAD_MIN_SECS = 10;     // ...but never before the clock has run this long, so fast rounds stay winnable
   const DEAD_MULT = 2;          // the round dies when the count reaches this multiple of the answer
   const SMALL_MAX = 30;         // deck tiers for the per-game draw: ≤30 / 31–9,999 / 10,000+
   const PICK = { small: 3, medium: 4, big: 3 };
@@ -907,7 +907,6 @@
     state.current = state.questions[state.round - 1];
     document.body.dataset.ink = 'mcyto'[(state.round - 1) % 5];            // each round takes the next color
     $('qText').textContent = state.current[0];
-    $('qBand').textContent = `Question ${state.round}`;
     const num = $('num');
     num.classList.add('is-label'); num.style.fontSize = ''; num.textContent = 'Start';
     $('sub').hidden = false;
@@ -946,7 +945,7 @@
       fitNum(s.length);
       if (state.rate <= TICK_RATE_MAX) sound.tick();
     }
-    if (v >= state.current[1] * DEAD_MULT) { deadRound(); return; }
+    if (v >= state.current[1] * DEAD_MULT && (ts - state.t0) / 1000 >= DEAD_MIN_SECS) { deadRound(); return; }
     state.raf = requestAnimationFrame(loop);
   }
 
@@ -1149,7 +1148,7 @@
     $('resTappedNum').textContent = fmt(state.displayed);
     $('resTappedNum').classList.toggle('bull', won && state.bullseye);
     $('resVerdict').hidden = won || why !== 'dead';
-    $('resVerdict').textContent = `The count hit ${fmt(a * DEAD_MULT)}, double the answer, before anyone tapped. Nobody scores.`;
+    $('resVerdict').textContent = `The count ran to ${fmt(state.displayed)} before anyone tapped. Nobody scores.`;
     $('resAnswerNum').textContent = a.toLocaleString('en-US');
     $('resAnswerUnit').textContent = u || '';
     $('resNote').textContent = note || ''; $('resNote').hidden = !note;
@@ -1205,7 +1204,7 @@
   }
   function disarmGiveUp() {
     clearTimeout(state.armTimer);
-    const g = $('giveUp'); g.classList.remove('armed'); g.textContent = "Nobody's getting this one";
+    const g = $('giveUp'); g.classList.remove('armed'); g.textContent = "Everyone missed";
   }
 
   function endGame() {
