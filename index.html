@@ -1,0 +1,1348 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Perfect Timing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Martian+Mono:wdth,wght@75..112.5,100..800&display=swap">
+<style>
+  /* base reset (the artifact host normally supplies this) */
+  :root { color-scheme: light; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); box-sizing: border-box; }
+  html { height: 100%; }
+  body { margin: 0; font: 14px/1.4 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+</style>
+<style>
+  /* Layout: one-screen app that behaves like a box of cards. Clean paper, black type, lots of air. The question
+     sits on a playing card with a colored band; the round's one color also fills the big button. Each round
+     takes the next color from a small set, the way each game on the shelf gets its own. */
+  :root {
+    --paper: #FFFFFF;
+    --ink: #121212;
+    --mute: #6E6E76;
+    --line: #DDDDE2;
+    --soft: #F2F2F5;
+    --panel: #FFFFFF;
+    --scrim: rgba(255, 255, 255, .84);
+    /* the round colors: the same in both themes */
+    --c: #3D6BFF;
+    --m: #EC1C8C;
+    --y: #FFC629;
+    --t: #19B5B0;
+    --o: #FF6B2C;
+    --k: #121212;
+    --w: #FFFFFF;
+    --field: var(--m);
+    --on: #FFFFFF;
+    --display: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
+    --mono: 'Martian Mono', ui-monospace, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #121214; --ink: #F6F6F8; --mute: #9C9CA6; --line: #2E2E35; --soft: #1C1C21; --panel: #19191E; --scrim: rgba(18, 18, 20, .84);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #121214; --ink: #F6F6F8; --mute: #9C9CA6; --line: #2E2E35; --soft: #1C1C21; --panel: #19191E; --scrim: rgba(18, 18, 20, .84);
+    color-scheme: dark;
+  }
+  body[data-ink="c"] { --field: var(--c); --on: #FFFFFF; }
+  body[data-ink="m"] { --field: var(--m); --on: #FFFFFF; }
+  body[data-ink="y"] { --field: var(--y); --on: #121212; }
+  body[data-ink="t"] { --field: var(--t); --on: #121212; }
+  body[data-ink="o"] { --field: var(--o); --on: #121212; }
+
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--display); -webkit-text-size-adjust: 100%; }
+  * { box-sizing: border-box; }
+  button { font: inherit; color: inherit; }
+
+  #app {
+    height: 100%; max-width: 600px; margin: 0 auto;
+    display: flex; flex-direction: column;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 12px 14px;
+  }
+
+  /* status strip */
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex: 0 0 auto;
+            font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--mute); font-weight: 600; }
+  .brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; color: var(--ink); }
+  .mark { width: 13px; height: 13px; border-radius: 50%; background: var(--m); box-shadow: 0 2px 0 color-mix(in srgb, var(--m) 60%, black); flex: 0 0 auto; }
+  .iconbtn { background: none; border: 1.5px solid var(--line); border-radius: 999px; padding: 6px 10px; cursor: pointer;
+             font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--mute); touch-action: manipulation; }
+  .iconbtn[aria-pressed="true"] { color: var(--ink); }
+  .iconbtn.icon { width: 36px; height: 30px; padding: 0; display: inline-flex; align-items: center; justify-content: center; color: var(--ink); -webkit-tap-highlight-color: transparent; }
+  .iconbtn.icon[aria-pressed="false"] { color: var(--mute); }
+  .topbar-right { display: inline-flex; gap: 6px; flex: 0 0 auto; }
+  .scores { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; flex: 0 0 auto; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px 4px 6px; border-radius: 999px;
+          background: var(--panel); border: 1.5px solid var(--line); color: var(--ink); font-family: var(--mono); font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .chip .e { font-size: 18px; line-height: 1; }
+
+  .screen { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .screen > * { flex: 0 0 auto; }
+
+  /* type */
+  .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--mute); font-weight: 700; }
+  h1 { font-size: clamp(62px, 19vw, 112px); line-height: .88; letter-spacing: -.055em; font-weight: 800; margin: 0; text-wrap: balance; }
+  h2 { font-size: clamp(26px, 7vw, 36px); line-height: 1.02; letter-spacing: -.025em; font-weight: 800; margin: 0; text-wrap: balance; }
+  p { margin: 0; line-height: 1.45; }
+  .lede { font-size: 18px; font-weight: 500; max-width: 30ch; }
+  .muted { color: var(--mute); }
+
+  .qcard { margin-top: 14px; background: var(--panel); border: 2px solid var(--ink); border-radius: 20px; overflow: hidden; }
+  .question { font-size: clamp(28px, 8.8vw, 48px); font-weight: 800; line-height: 1.04; letter-spacing: -.035em; text-wrap: balance;
+              padding: 18px 18px 22px; overflow-wrap: anywhere; color: var(--ink); }
+  .qband { display: flex; justify-content: space-between; gap: 12px; padding: 9px 18px; background: var(--field); color: var(--on);
+           font-family: var(--mono); font-size: 10.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+
+  /* the button: a chunky game piece in the round's color */
+  .stage { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; position: relative; min-height: 0; padding-block: 18px 10px;
+           container-type: size; }
+  .big {
+    --d: min(78vw, 42vh, 360px);
+    --d: max(180px, min(78vw, calc(100cqh - 24px), 360px));   /* fill whatever height the question leaves */
+    width: var(--d); height: var(--d); border-radius: 50%; border: 0; padding: 0;
+    --deep: color-mix(in srgb, var(--field) 62%, black);
+    background: var(--field); color: var(--on);
+    box-shadow: 0 10px 0 var(--deep);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    cursor: pointer; touch-action: manipulation; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
+    transition: transform .06s ease, box-shadow .06s ease, background .12s ease, color .12s ease;
+    font-family: var(--mono);
+  }
+  .big.down, .big:active { transform: translateY(8px); box-shadow: 0 2px 0 var(--deep); }
+  .big:focus-visible { outline: 3px solid var(--ink); outline-offset: 5px; }
+  .big.early { background: var(--ink); color: var(--paper); box-shadow: 0 10px 0 var(--mute); animation: shake .42s ease; }
+  .num { font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; letter-spacing: -.04em; white-space: nowrap; }
+  .num.is-label { font-size: clamp(26px, 8vw, 36px); letter-spacing: .14em; padding-left: .14em; }
+  .sub { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; opacity: .7; }
+  .badge {
+    position: absolute; top: 4px; left: 50%; transform: translate(-50%, 6px) scale(.9);
+    background: var(--ink); color: var(--paper); font-family: var(--mono); font-weight: 800; font-size: 14px; letter-spacing: .18em; text-transform: uppercase;
+    padding: 10px 16px 10px 19px; border-radius: 999px; opacity: 0; pointer-events: none; transition: opacity .1s, transform .1s;
+  }
+  .badge.show { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  @keyframes shake {
+    10%, 90% { transform: translateX(-2px); } 20%, 80% { transform: translateX(4px); }
+    30%, 50%, 70% { transform: translateX(-7px); } 40%, 60% { transform: translateX(7px); }
+  }
+
+  /* buttons: flat black, or a two-pixel outline */
+  .btn { font-family: var(--mono); font-weight: 800; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; border: 2px solid var(--ink); border-radius: 999px;
+         padding: 16px 24px; background: var(--ink); color: var(--paper); cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  .btn.primary { transition: transform .06s, box-shadow .06s; box-shadow: 4px 4px 0 var(--m); }
+  .btn.primary:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--m); }
+  .btn.ghost { background: transparent; color: var(--ink); }
+  .btn:focus-visible, .pbtn:focus-visible, .iconbtn:focus-visible, .link:focus-visible, .seg button:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+  .link { background: none; border: 0; color: var(--ink); font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; font-weight: 700;
+          text-decoration: underline; text-underline-offset: 4px; cursor: pointer; padding: 12px; align-self: center; touch-action: manipulation; opacity: .75; }
+  .link.armed { opacity: 1; background: var(--ink); color: var(--paper); text-decoration: none; border-radius: 999px; }
+  .stack { display: flex; flex-direction: column; gap: 12px; }
+  .row-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+  .row-btns .btn { flex: 1 1 140px; }
+
+  /* start: a poster */
+  .start { justify-content: center; gap: 26px; padding-block: 14px; }
+  .swatches { display: flex; gap: 6px; }
+  .swatches i { display: block; width: 18px; height: 18px; border-radius: 50%; }
+  .swatches i:nth-child(1) { background: var(--m); } .swatches i:nth-child(2) { background: var(--c); }
+  .swatches i:nth-child(3) { background: var(--y); } .swatches i:nth-child(4) { background: var(--t); } .swatches i:nth-child(5) { background: var(--o); }
+  .rules { display: grid; gap: 12px; border-top: 1.5px solid var(--line); padding-top: 18px; }
+  .rule { display: grid; grid-template-columns: 34px 1fr; gap: 10px; align-items: start; }
+  .rule .k { font-family: var(--mono); font-size: 11px; font-weight: 800; letter-spacing: .08em; padding-top: 4px; }
+  .rule .k { color: var(--m); }
+  .rule p { font-size: 15px; }
+
+  /* settings */
+  .settings { gap: 0; padding-block: 14px; }
+  .settings .eyebrow { margin-bottom: 8px; }
+  .setting { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; padding-block: 18px; border-top: 1.5px solid var(--line); }
+  .setting:last-of-type { border-bottom: 1.5px solid var(--line); margin-bottom: 18px; }
+  .setting .label { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1 1 180px; }
+  .setting .label b { font-size: 17px; font-weight: 800; }
+  .setting .label p { font-size: 14px; color: var(--mute); }
+  .seg { display: inline-flex; border: 2px solid var(--ink); border-radius: 999px; padding: 3px; gap: 2px; }
+  .seg button { border: 0; background: transparent; border-radius: 999px; padding: 9px 14px; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+                font-family: var(--mono); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--mute); }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+
+  /* result: paper, with the round's color kept as a chip */
+  .result { gap: 18px; padding-block: 16px; }
+  .res-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .res-head .eyebrow { background: var(--field); color: var(--on); padding: 6px 11px; border-radius: 999px; }
+  .hit { background: var(--ink); color: var(--paper); font-family: var(--mono); font-weight: 800; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; padding: 6px 11px; border-radius: 999px; }
+  .big-answer { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .ans-num { font-family: var(--display); font-weight: 800; font-size: clamp(64px, 19vw, 112px); line-height: .95; letter-spacing: -.045em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; color: var(--ink); }
+  .ans-unit { font-family: var(--mono); font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--mute); font-weight: 700; }
+  .tapline { font-family: var(--mono); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--mute); margin-top: 6px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; font-weight: 700; }
+  .tapline b { font-weight: 800; font-size: 24px; letter-spacing: -.02em; text-transform: none; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .tapline b.bull { color: var(--m); }
+  .verdict { font-size: 19px; font-weight: 800; line-height: 1.25; max-width: 34ch; }
+  .note { font-size: 17px; line-height: 1.45; color: var(--ink); max-width: 42ch; margin-top: 8px; }
+  .who { display: flex; flex-wrap: wrap; gap: 10px; }
+  .pbtn { width: 74px; height: 74px; border-radius: 18px; font-size: 40px; line-height: 1; background: var(--panel); border: 2px solid var(--ink); cursor: pointer;
+          touch-action: manipulation; -webkit-tap-highlight-color: transparent; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+  .pbtn:active { transform: scale(.94); }
+  .pbtn.new { width: auto; padding: 0 18px; font-family: var(--mono); font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; border-style: dashed; }
+  .card { background: var(--field); color: var(--on); border-radius: 18px; padding: 18px; display: flex; align-items: center; gap: 16px; }
+  .card .e { font-size: 56px; line-height: 1; }
+  .card p { font-size: 15px; }
+
+  /* new player */
+  .center { justify-content: center; align-items: center; text-align: center; gap: 18px; }
+  .hero { font-size: clamp(110px, 36vw, 160px); line-height: 1; }
+
+  /* end: bars in process colors by rank */
+  .end { gap: 18px; padding-block: 14px; }
+  .podium { display: flex; align-items: center; gap: 16px; }
+  .podium .e { font-size: clamp(64px, 20vw, 88px); line-height: 1; }
+  .rank { display: flex; flex-direction: column; gap: 8px; }
+  .row { display: grid; grid-template-columns: 44px 1fr 48px; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 14px; background: var(--panel); border: 2px solid var(--line); }
+  .row.win { border-color: var(--ink); }
+  .row .e { font-size: 32px; line-height: 1; }
+  .barwrap { height: 12px; background: var(--soft); border-radius: 999px; overflow: hidden; min-width: 0; }
+  .fill { height: 100%; background: var(--ink); border-radius: 999px; }
+  .row:nth-child(5n+1) .fill { background: var(--m); } .row:nth-child(5n+2) .fill { background: var(--c); } .row:nth-child(5n+3) .fill { background: var(--y); }
+  .row:nth-child(5n+4) .fill { background: var(--t); } .row:nth-child(5n+5) .fill { background: var(--o); }
+  .pts { font-family: var(--mono); font-weight: 800; font-size: 16px; text-align: right; font-variant-numeric: tabular-nums; }
+  .stats { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--mute); font-weight: 700; }
+
+  /* editor */
+  .edit { gap: 12px; padding-block: 10px; }
+  textarea { flex: 1 1 260px; min-height: 260px; width: 100%; resize: vertical; border: 2px solid var(--ink); border-radius: 12px; background: var(--panel); color: var(--ink);
+             font-family: var(--mono); font-size: 12px; line-height: 1.5; padding: 12px; }
+  textarea:focus-visible { outline: 2px solid var(--m); outline-offset: 2px; }
+  .help { font-size: 13px; color: var(--mute); }
+  .help code { font-family: var(--mono); font-size: 11.5px; }
+  .status { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--m); min-height: 1.2em; font-weight: 700; }
+
+  /* celebration: the round's color takes over the screen; a bullseye runs through all five and lands on black */
+  .cele { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; overflow: hidden;
+          background: var(--field); color: var(--on); cursor: pointer; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+          padding: env(safe-area-inset-top, 0px) max(16px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(16px, env(safe-area-inset-left, 0px));
+          animation: cele-in .16s ease-out both; }
+  .cele canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .cele-inner { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px; max-width: 600px; width: 100%; }
+  .cele-eyebrow { color: inherit; opacity: .65; }
+  .cele-title { font-family: var(--display); font-weight: 800; font-size: clamp(58px, 17.5vw, 120px); line-height: .88; letter-spacing: -.055em; text-wrap: balance;
+                animation: pop .55s cubic-bezier(.2, 1.5, .4, 1) both; }
+  .cele-numwrap { display: flex; align-items: baseline; justify-content: center; gap: 10px; flex-wrap: wrap; animation: pop .5s .1s cubic-bezier(.2, 1.5, .4, 1) both; max-width: 100%; }
+  .cele-num { font-family: var(--mono); font-weight: 800; font-size: clamp(40px, 12vw, 72px); line-height: 1; letter-spacing: -.03em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  .cele-unit { font-family: var(--mono); font-size: 13px; letter-spacing: .14em; text-transform: uppercase; opacity: .8; }
+  .cele-sub { font-family: var(--mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; opacity: .7; animation: cele-in .3s .35s both; }
+  .cele-chip { font-size: 13px; padding: 8px 16px; background: var(--on); color: var(--field); animation: pop .5s .25s cubic-bezier(.2, 1.5, .4, 1) both; }
+  .cele .ring { display: none; }
+  .cele.bull { background: var(--k); color: var(--w); animation: strobe .64s steps(1, end) both; }
+  .cele.bull .cele-title { letter-spacing: -.045em; animation: slam .6s cubic-bezier(.2, 1.6, .4, 1) both; }
+  .cele.bull .cele-title .c { color: var(--c); } .cele.bull .cele-title .m { color: var(--m); } .cele.bull .cele-title .y { color: var(--y); }
+  .cele.bull .cele-title .t { color: var(--t); } .cele.bull .cele-title .o { color: var(--o); }
+  .cele.bull .cele-chip { background: var(--y); color: var(--k); }
+  .cele.bull .ring { display: block; position: absolute; left: 50%; top: 50%; width: 42vmin; height: 42vmin; border: 5px solid var(--m); border-radius: 50%;
+                     transform: translate(-50%, -50%) scale(.2); opacity: 0; animation: ring 1.1s ease-out .05s both; pointer-events: none; }
+  .cele.bull .ring + .ring { animation-delay: .3s; border-width: 3px; border-color: var(--c); }
+  @keyframes cele-in { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes pop { 0% { transform: scale(.4); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+  @keyframes slam { 0% { transform: scale(3.2); opacity: 0; } 55% { transform: scale(.94); opacity: 1; } 100% { transform: scale(1); } }
+  @keyframes ring { 0% { transform: translate(-50%, -50%) scale(.2); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(3.2); opacity: 0; } }
+  @keyframes strobe {
+    0% { background: var(--m); } 16% { background: var(--c); } 32% { background: var(--y); } 48% { background: var(--t); }
+    64% { background: var(--o); } 80% { background: var(--m); } 90%, 100% { background: var(--k); }
+  }
+
+  /* pause */
+  .pause { position: fixed; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center; background: var(--scrim);
+           backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+           padding: env(safe-area-inset-top, 0px) max(16px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(16px, env(safe-area-inset-left, 0px)); }
+  .pause-card { background: var(--panel); color: var(--ink); border: 2px solid var(--ink); border-radius: 22px; padding: 24px; width: min(100%, 360px); display: flex; flex-direction: column; gap: 18px; }
+  .pause-card .btn { width: 100%; }
+  .pause-card .eyebrow { color: var(--mute); }
+  .btn.ghost.armed { border-color: var(--m); color: var(--m); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .big, .btn.primary, .badge { transition: none; }
+    .big.early { animation: none; }
+    .cele, .cele.bull, .cele-title, .cele.bull .cele-title, .cele-numwrap, .cele-sub, .cele-chip, .cele.bull .ring { animation: none; opacity: 1; transform: none; }
+    .cele.bull .ring { display: none; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <span class="brand"><span class="mark" aria-hidden="true"></span>Perfect Timing</span>
+    <span id="roundLabel"></span>
+    <span class="topbar-right">
+      <button class="iconbtn icon" id="pauseBtn" type="button" aria-label="Pause" hidden>
+        <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><rect x="1.5" y="1" width="3.2" height="10" rx="1" fill="currentColor"/><rect x="7.3" y="1" width="3.2" height="10" rx="1" fill="currentColor"/></svg>
+      </button>
+      <button class="iconbtn icon" id="soundBtn" type="button" aria-pressed="true" aria-label="Sound on">
+        <svg id="sndOnIcon" width="14" height="12" viewBox="0 0 14 12" aria-hidden="true"><path d="M1 4h2.5L7 1v10L3.5 8H1z" fill="currentColor"/><path d="M9.5 3.5a3.5 3.5 0 0 1 0 5M11.5 1.5a6.2 6.2 0 0 1 0 9" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        <svg id="sndOffIcon" width="14" height="12" viewBox="0 0 14 12" aria-hidden="true" hidden><path d="M1 4h2.5L7 1v10L3.5 8H1z" fill="currentColor"/><path d="M9.5 3.5l4 5M13.5 3.5l-4 5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      </button>
+    </span>
+  </header>
+  <div class="scores" id="scores" hidden></div>
+
+  <!-- START -->
+  <section class="screen start" id="screen-start">
+    <div class="stack">
+      <span class="swatches" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+      <h1>Perfect<br>Timing</h1>
+      <p class="lede">A number climbs from zero. Tap the button the instant it reaches the answer. Not a moment before.</p>
+    </div>
+    <div class="rules">
+      <div class="rule"><span class="k">01</span><p id="rule1">A question comes up and the number starts climbing right away. Read fast.</p></div>
+      <div class="rule"><span class="k">02</span><p>First to tap at or past the answer wins the round. Within 1.5 seconds of the exact number is a <b>bullseye: double points.</b></p></div>
+      <div class="rule"><span class="k">03</span><p>Too early? The button says so and keeps counting. Try again.</p></div>
+      <div class="rule"><span class="k">04</span><p>If the count reaches <b>double the answer</b>, the round is dead and nobody scores. Don't sit on it.</p></div>
+      <div class="rule"><span class="k">05</span><p>Win a round, get an emoji. Ten rounds. Most points wins.</p></div>
+    </div>
+    <div class="stack">
+      <div class="row-btns">
+        <button class="btn primary" id="playBtn" type="button">Play</button>
+        <button class="btn ghost" id="settingsBtn" type="button">Settings</button>
+      </div>
+      <p class="muted" id="deckInfo" style="font-size:13px"></p>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="screen settings" id="screen-settings" hidden>
+    <span class="eyebrow" style="margin-top:14px">Settings</span>
+    <div class="setting">
+      <div class="label"><b>Count starts</b><p>With the question, or only when someone taps the button.</p></div>
+      <div class="seg" role="group" aria-label="Count starts">
+        <button type="button" id="startAuto" aria-pressed="true">Right away</button>
+        <button type="button" id="startTap" aria-pressed="false">On tap</button>
+      </div>
+    </div>
+    <div class="setting">
+      <div class="label"><b>Units</b><p>Heights, distances and speeds in the deck switch with this. Takes effect from the next game.</p></div>
+      <div class="seg" role="group" aria-label="Units">
+        <button type="button" id="unitMetric" aria-pressed="false">Metric</button>
+        <button type="button" id="unitImperial" aria-pressed="true">Imperial</button>
+      </div>
+    </div>
+    <div class="setting">
+      <div class="label"><b>Sound</b><p>The slow tick, the buzz, the ding.</p></div>
+      <div class="seg" role="group" aria-label="Sound">
+        <button type="button" id="sndOn" aria-pressed="true">On</button>
+        <button type="button" id="sndOff" aria-pressed="false">Off</button>
+      </div>
+    </div>
+    <div class="setting">
+      <div class="label"><b>Deck</b><p id="settingsDeckInfo"></p></div>
+      <button class="btn ghost" id="editBtn" type="button">Edit the deck</button>
+    </div>
+    <button class="btn" id="settingsBack" type="button">Back</button>
+  </section>
+
+  <!-- ROUND -->
+  <section class="screen" id="screen-round" hidden>
+    <div class="qcard">
+      <p class="question" id="qText"></p>
+      <div class="qband"><span id="qBand">Question 1</span><span>Perfect Timing</span></div>
+    </div>
+    <div class="stage">
+      <div class="badge" id="badge" aria-live="assertive">Too early</div>
+      <button class="big" id="bigBtn" type="button" aria-label="Tap when the number reaches the answer">
+        <span class="num is-label" id="num">Start</span>
+        <span class="sub" id="sub">the count</span>
+      </button>
+    </div>
+    <button class="link" id="giveUp" type="button" hidden>Nobody's getting this one</button>
+  </section>
+
+  <!-- RESULT -->
+  <section class="screen result" id="screen-result" hidden>
+    <div class="res-head"><span class="eyebrow" id="resEyebrow">Correct</span><span class="hit" id="resHit" hidden>Double points</span></div>
+    <div class="stack" style="gap:6px">
+      <div class="big-answer"><span class="ans-num" id="resAnswerNum">21</span><span class="ans-unit" id="resAnswerUnit">seconds</span></div>
+      <p class="tapline" id="resTapped"><span>Tapped at</span><b id="resTappedNum">23</b></p>
+      <p class="verdict" id="resVerdict" hidden></p>
+      <p class="note" id="resNote"></p>
+    </div>
+    <div class="stack" id="whoBlock">
+      <span class="eyebrow" id="whoLabel">Who got it?</span>
+      <div class="who" id="who"></div>
+    </div>
+    <div class="card" id="firstCard" hidden>
+      <span class="e" id="firstEmoji">🦊</span>
+      <p>First on the board. Whoever tapped, <b>that's you from now on.</b> Pick yourself from the lineup next time.</p>
+    </div>
+    <button class="btn primary" id="nextBtn" type="button" hidden>Next round</button>
+  </section>
+
+  <!-- NEW PLAYER -->
+  <section class="screen center" id="screen-newplayer" hidden>
+    <span class="eyebrow">New player</span>
+    <div class="hero" id="newEmoji">🐸</div>
+    <h2>You're this now.</h2>
+    <p class="muted" style="max-width:28ch">Point's on the board. Next time you win a round, tap your own face.</p>
+    <button class="btn primary" id="newNextBtn" type="button">Next round</button>
+  </section>
+
+  <!-- END -->
+  <section class="screen end" id="screen-end" hidden>
+    <span class="eyebrow">That's the game</span>
+    <div class="podium">
+      <span class="e" id="endHero">🦊</span>
+      <h2 id="endLine">Wins.</h2>
+    </div>
+    <div class="rank" id="rank"></div>
+    <p class="stats" id="endStats"></p>
+    <div class="row-btns">
+      <button class="btn primary" id="againBtn" type="button">Play again</button>
+      <button class="btn ghost" id="homeBtn" type="button">Back to start</button>
+    </div>
+  </section>
+
+  <!-- EDITOR -->
+  <section class="screen edit" id="screen-edit" hidden>
+    <span class="eyebrow" style="margin-top:14px">The deck</span>
+    <p class="help">One question per line: <code>question | answer | unit | note</code>. Commas in numbers are fine; lines starting with <code>#</code> are skipped. If a question has an imperial version, put it after <code>||</code> on the same line and the Units setting picks between them. Every round reaches its answer somewhere between 3 and 30 seconds in, and small answers never tick slower than once a second. Each game draws 3 small, 4 medium and 3 big answers, shuffled.</p>
+    <textarea id="deckText" spellcheck="false" aria-label="Deck, one question per line"></textarea>
+    <span class="status" id="editStatus"></span>
+    <div class="row-btns">
+      <button class="btn primary" id="saveDeckBtn" type="button">Save deck</button>
+      <button class="btn ghost" id="resetDeckBtn" type="button">Reset to default</button>
+      <button class="btn ghost" id="backBtn" type="button">Back</button>
+    </div>
+  </section>
+</div>
+
+<!-- CELEBRATION (overlay, shown for a couple of seconds after a correct tap) -->
+<div class="cele" id="cele" hidden>
+  <canvas id="confetti" aria-hidden="true"></canvas>
+  <div class="ring"></div><div class="ring"></div>
+  <div class="cele-inner">
+    <span class="eyebrow cele-eyebrow" id="celeEyebrow">Round 1</span>
+    <div class="cele-title" id="celeTitle">You got it!</div>
+    <div class="cele-numwrap"><span class="cele-num" id="celeNum">23</span><span class="cele-unit" id="celeUnit">seconds</span></div>
+    <span class="hit cele-chip" id="celeChip" hidden>Double points</span>
+    <span class="cele-sub" id="celeSub">0.4 s after it came up</span>
+  </div>
+</div>
+
+<!-- PAUSE -->
+<div class="pause" id="pause" hidden>
+  <div class="pause-card">
+    <div class="stack" style="gap:6px">
+      <span class="eyebrow">Paused</span>
+      <h2 id="pauseTitle">Round 3 of 10</h2>
+    </div>
+    <div class="stack">
+      <button class="btn primary" id="resumeBtn" type="button">Resume</button>
+      <button class="btn ghost" id="quitBtn" type="button">Quit game</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ───────────── TUNING ─────────────
+  const ROUNDS = 10;
+  const T_MIN = 3;              // seconds until the count reaches the answer: drawn evenly from this range,
+  const T_MAX = 30;             // so some rounds are over as you finish reading and some crawl for half a minute
+  const BULLSEYE_SECS = 1.5;    // tap within this many seconds of the exact number for double points
+  const DEAD_MULT = 2;          // the round dies when the count reaches this multiple of the answer
+  const SMALL_MAX = 30;         // deck tiers for the per-game draw: ≤30 / 31–9,999 / 10,000+
+  const PICK = { small: 3, medium: 4, big: 3 };
+  const TICK_RATE_MAX = 12;     // tick sound per step only while steps are this slow or slower
+  const START_LOCK_MS = 500;    // ignore taps right after the count starts (double-tap guard)
+  const EARLY_LOCK_MS = 250;
+  const EARLY_SHOW_MS = 650;
+
+  // question | answer | unit | note. An entry with {m, i} has a metric and an imperial version.
+  const DEFAULT_DECK = [
+    ['How many seconds does it take a mammal to pee?', 21, 'seconds', 'About 21, cat or elephant. Georgia Tech timed it and won an Ig Nobel Prize for the trouble.'],
+    ['How many figures are on the cover of Sgt. Pepper\'s?', 71, 'figures', '71 on the official identification chart, counting the Beatles twice: in person and in wax.'],
+    ['How many years ago did the universe begin?', 13800000000, 'years ago', '13.8 billion, give or take a hundred million.'],
+    ['How many people have walked on the Moon?', 12, 'people', 'Twelve, all between 1969 and 1972.'],
+    ['How many bones are in a giraffe\'s neck?', 7, 'bones', 'Seven, same as yours. Each one is about ten inches (25 cm) long.'],
+    ['How many time zones does Russia have?', 11, 'time zones', 'Eleven. Breakfast in Kaliningrad is dinner in Kamchatka.'],
+    ['How many letters are in CMYK?', 4, 'letters', 'Cyan, magenta, yellow and key. Key means black. We know.'],
+    ['How many stars are on the flag of the European Union?', 12, 'stars', 'Twelve, no matter how many countries join or leave.'],
+    ['How many balls are on the table when a frame of snooker starts?', 22, 'balls', 'Fifteen reds, six colours, one cue ball.'],
+    ['How many hearts does an octopus have?', 3, 'hearts', 'Three. Two for the gills, one for everything else.'],
+    ['How many lines are in a sonnet?', 14, 'lines', 'Fourteen. Shakespeare wrote 154 of them.'],
+    ['How many letters are in the Hawaiian alphabet?', 13, 'letters', 'Five vowels, seven consonants and the ʻokina.'],
+    ['How many days did Apollo 11 spend away from Earth?', 8, 'days', 'Eight days and three hours. Launch July 16, splashdown July 24, 1969.'],
+    ['How many frames per second does a movie run at?', 24, 'frames', '24, standard since sound arrived in the late 1920s. Fast enough for the audio, slow enough to save film.'],
+    ['How many children did Johann Sebastian Bach have?', 20, 'children', 'Twenty, with two wives. Four of them became composers.'],
+    ['How many teeth does an adult human have?', 32, 'teeth', 'Thirty-two, wisdom teeth included.'],
+    ['How many strings are on a concert harp?', 47, 'strings', 'Forty-seven strings and seven pedals.'],
+    ['How many keys are on a piano?', 88, 'keys', 'Fifty-two white, thirty-six black.'],
+    ['How many languages has Wavelength been published in?', 31, 'languages', 'Thirty-one and counting.'],
+    ['How many wooden racers come in a box of Magical Athlete?', 36, 'racers', 'Thirty-six racers, thirty-six cards, one very tense track.'],
+    ['How many spectrum cards come in a box of Wavelength?', 84, 'cards', '84 cards, two spectrums each. 168 ways to start an argument.'],
+    ['How many cards come in a box of Monikers?', 440, 'cards', '440. Nobody has made it through all of them in one night.'],
+    ['How many cards are in the Shut Up & Sit Down expansion for Monikers?', 112, 'cards', '112, in a box called the Nonsense Box, which is accurate.'],
+    ['How many elements are on the periodic table?', 118, 'elements', '118, ending with oganesson.'],
+    ['How many countries are in the United Nations?', 193, 'countries', '193 member states. The newest is South Sudan, in 2011.'],
+    ['How many countries are in Africa?', 54, 'countries', '54, which is more than a quarter of the United Nations.'],
+    ['How many bones are in an adult human body?', 206, 'bones', '206. Babies start with around 270 and fuse as they go.'],
+    ['How many chromosomes do humans have?', 46, 'chromosomes', '46, in 23 pairs. A potato has 48.'],
+    ['How many seconds does sunlight take to reach Earth?', 499, 'seconds', 'Eight minutes and nineteen seconds. The Sun you see is the Sun from a while ago.'],
+    ['How many rooms are in the White House?', 132, 'rooms', '132 rooms, 35 of them bathrooms.'],
+    ['How many words are in the Gettysburg Address?', 272, 'words', 'About 272, in about two minutes. The main speaker that day went on for two hours.'],
+    { m: ['How fast does sound travel through air, in meters per second?', 343, 'm/s', 'About 343 at room temperature. Faster when it\'s warm, slower when it\'s cold.'],
+      i: ['How fast does sound travel through air, in miles per hour?', 767, 'mph', 'About 767 at room temperature. Faster when it\'s warm, slower when it\'s cold.'] },
+    ['How many seats are in the US House of Representatives?', 435, 'seats', '435, fixed by law since 1929.'],
+    ['How many ridges are on the edge of a US quarter?', 119, 'ridges', '119. A dime has 118. Nobody is sure why.'],
+    ['How many squares are on a chessboard, counting every size?', 204, 'squares', '64 little ones, plus 140 more once you count the 2×2s up through the whole board.'],
+    ['How many dots are on a pair of dice?', 42, 'dots', 'Twenty-one per die.'],
+    ['How many floors does the Empire State Building have?', 102, 'floors', '102 floors, 1,454 feet (443 m) to the tip.'],
+    ['How many letters are in the Russian alphabet?', 33, 'letters', '33. Two of them make no sound at all.'],
+    ['How many letters are in pneumonoultramicroscopicsilicovolcanoconiosis?', 45, 'letters', '45. It\'s a lung disease, and the word was coined mostly to be long.'],
+    ['How many years did the Hundred Years\' War last?', 116, 'years', '116, from 1337 to 1453. Nobody wanted to rename it.'],
+    ['How many years ago were the pyramids of Giza built?', 4500, 'years ago', 'About 4,500. Cleopatra lived closer to the Moon landing than to the pyramids.'],
+    ['How many stone blocks are in the Great Pyramid of Giza?', 2300000, 'blocks', 'About 2.3 million, averaging over two tons each.'],
+    { m: ['How many meters tall is Mount Everest?', 8849, 'meters', '8,849 per the 2020 survey. It grows about 4 mm a year.'],
+      i: ['How many feet tall is Mount Everest?', 29032, 'feet', '29,032 per the 2020 survey. It grows about a sixth of an inch a year.'] },
+    ['How many steps are there to the top of the Eiffel Tower?', 1665, 'steps', '1,665. The public can climb 674 of them, up to the second floor.'],
+    ['How many languages are spoken in the world?', 7000, 'languages', 'Roughly 7,000, and about 40% of them are endangered.'],
+    ['How many seconds are in a day?', 86400, 'seconds', '86,400. You\'ve used a few of them on this.'],
+    ['How many islands does Japan have?', 14125, 'islands', '14,125. A 2023 recount found 7,000 the old count had missed.'],
+    ['How many emoji are in the Unicode standard?', 3972, 'emoji', '3,972 as of Emoji 18.0. This game needed 24.'],
+    ['How many ratings does the Wavelength app have on the App Store?', 64000, 'ratings', 'About 64,000, averaging 4.9 stars.'],
+    ['How many minutes are in a week?', 10080, 'minutes', '10,080. Monikers takes about 45 of them.'],
+    ['How many times does a human heart beat in a day?', 100000, 'beats', 'About 100,000, at a resting 70 beats a minute.'],
+    { m: ['How many kilometers is the Moon from Earth, on average?', 384400, 'km', '384,400, and it drifts about 4 cm further away every year.'],
+      i: ['How many miles is the Moon from Earth, on average?', 238855, 'miles', '238,855, and it drifts about an inch and a half further away every year.'] },
+    { m: ['How fast does light travel, in kilometers per second?', 299792, 'km/s', '299,792. Around the equator seven and a half times a second.'],
+      i: ['How fast does light travel, in miles per second?', 186282, 'miles/s', '186,282. Around the equator seven and a half times a second.'] },
+    ['How many copies of Wavelength have been sold?', 2000000, 'copies', 'Two million and counting.'],
+    ['How many years ago did the dinosaurs go extinct?', 66000000, 'years ago', '66 million. The asteroid hit what is now the Yucatán.'],
+    ['How many seconds are in a year?', 31536000, 'seconds', '31,536,000. Add 86,400 in a leap year.'],
+    { m: ['How many kilometers is it from Earth to the Sun?', 149600000, 'km', '149,600,000: one astronomical unit.'],
+      i: ['How many miles is it from Earth to the Sun?', 92956000, 'miles', '92,956,000: one astronomical unit.'] },
+
+    // ── round two ──
+    ['How many moons does Mars have?', 2, 'moons', 'Phobos and Deimos. Fear and Dread. Both are probably captured asteroids.'],
+    ['How many holes are in a Ritz cracker?', 7, 'holes', 'Seven. They\'re called docker holes, and they stop the cracker puffing up in the oven.'],
+    ['How many points do you need to win Wavelength?', 10, 'points', 'Ten. Or a bullseye for four at a time.'],
+    ['How many times a day does the average person fart?', 14, 'times', 'Somewhere between 5 and 15. Fourteen is the number everyone quotes. Everyone.'],
+    ['How many sunrises does the space station see in a day?', 16, 'sunrises', 'Sixteen, one every 90 minutes. The crew runs on Greenwich time to stay sane.'],
+    ['How many hexes are on the Catan board?', 19, 'hexes', 'Nineteen. Eighteen get a number. The desert gets the robber.'],
+    ['How many different first moves can White make in chess?', 20, 'moves', 'Twenty: sixteen pawn moves and four knight hops.'],
+    ['How many letters were in the classical Latin alphabet?', 23, 'letters', '23. No J, no U, no W. Those came along in the Middle Ages.'],
+    ['How many books is the Odyssey divided into?', 24, 'books', '24, one per letter of the Greek alphabet. Odysseus doesn\'t show up until Book 5.'],
+    ['How many official James Bond films are there?', 25, 'films', '25, from Dr. No to No Time to Die. Never Say Never Again doesn\'t count, and never will.'],
+    ['How many amendments does the US Constitution have?', 27, 'amendments', '27. The newest, about congressional pay, took 202 years to ratify.'],
+    ['How many Olympic medals does Michael Phelps have?', 28, 'medals', '28. Twenty-three of them gold, which is more golds than most countries.'],
+    ['How many minutes did the shortest war in history last?', 38, 'minutes', '38 minutes, give or take seven. Britain versus Zanzibar, 1896. Zanzibar surrendered before lunch.'],
+    ['How many grams of sugar are in a can of Coke?', 39, 'grams', '39 grams in a 12-ounce can. About ten sugar cubes.'],
+    ['How many squares are on a Monopoly board?', 40, 'squares', 'Forty. 28 of them are for sale.'],
+    ['How many theaters are on Broadway?', 41, 'theaters', '41, and only four of them are actually on Broadway.'],
+    { m: ['How fast was Usain Bolt going at top speed, in kilometers per hour?', 44, 'km/h', '44.7 km/h, mid-race in Berlin, 2009. For about one second.'],
+      i: ['How fast was Usain Bolt going at top speed, in miles per hour?', 27, 'mph', '27.8 mph, mid-race in Berlin, 2009. For about one second.'] },
+    ['How many times has the Spiel des Jahres been awarded?', 48, 'times', '48, every year since 1979. The first winner was Hare & Tortoise.'],
+    { m: ['What was the hottest temperature ever recorded on Earth, in Celsius?', 57, '°C', '56.7 °C at Furnace Creek, Death Valley, in July 1913.'],
+      i: ['What was the hottest temperature ever recorded on Earth, in Fahrenheit?', 134, '°F', '134 °F at Furnace Creek, Death Valley, in July 1913.'] },
+    ['How many seconds do you get per turn in Monikers?', 60, 'seconds', 'Sixty. Then the deck comes back and you do it again with fewer words.'],
+    ['How many years did the longest case of hiccups last?', 68, 'years', '68 years. Charles Osborne of Iowa, 1922 to 1990. They stopped a year before he died.'],
+    ['How many hot dogs is the world record for ten minutes?', 76, 'hot dogs', '76, by Joey Chestnut at Coney Island, July 4, 2021.'],
+    ['How many suitors did Penelope have?', 108, 'suitors', '108, by Telemachus\'s count in Book 16. Odysseus got all of them.'],
+    ['How many years did the oldest verified person live?', 122, 'years', '122 years and 164 days. Jeanne Calment of Arles, who met Van Gogh and outlived the lawyer who bought her apartment on the bet she\'d die first.'],
+    ['How many minutes did the Apollo 11 moonwalk last?', 151, 'minutes', 'Two hours and 31 minutes outside. They were on the surface for 21 hours in total, most of it inside.'],
+    ['How many games are in a Major League Baseball season?', 162, 'games', '162 per team, which is why nobody can name all of them.'],
+    ['How many episodes of Friends are there?', 236, 'episodes', '236, over ten seasons. Ross got divorced three times in them.'],
+    ['How many hours did the longest stretch anyone has stayed awake last?', 264, 'hours', '264 hours, eleven days. Randy Gardner, 17, for a science fair in 1964.'],
+    { m: ['How many hectares is Central Park?', 341, 'hectares', '341 hectares, 6% of Manhattan. Bigger than Monaco.'],
+      i: ['How many acres is Central Park?', 843, 'acres', '843 acres, 6% of Manhattan. Bigger than Monaco.'] },
+    ['How many seconds long is Hey Jude?', 431, 'seconds', 'Seven minutes and eleven seconds. The na-na-nas start at the four-minute mark.'],
+    { m: ['How many liters of pee does a person produce in a year?', 500, 'liters', 'About 500. A liter and a half a day, 21 seconds at a time.'],
+      i: ['How many gallons of pee does a person produce in a year?', 130, 'gallons', 'About 130. Roughly a bathtub\'s worth every four months, 21 seconds at a time.'] },
+    ['How many stations does the New York City subway have?', 472, 'stations', '472, more than any other system on Earth.'],
+    ['How many Pokémon are there?', 1025, 'Pokémon', '1,025, through Scarlet and Violet. Generation 10 is going to ruin this question.'],
+    ['How many ships sailed to Troy?', 1186, 'ships', '1,186, if you add up Homer\'s Catalogue of Ships. "A thousand" was Marlowe rounding down.'],
+    ['How many backers did the Monikers Kickstarter have?', 3527, 'backers', '3,527 backers and $162,440, in 2014. The Wavelength campaign had 8,674.'],
+    ['How many words are in the US Constitution?', 4543, 'words', '4,543, signatures included. The amendments add another 3,000.'],
+    ['How many yellow cabs are there in New York City?', 13587, 'cabs', '13,587 medallions, a number fixed by law. There are far more Ubers.'],
+    ['How many performances did The Phantom of the Opera run on Broadway?', 13981, 'performances', '13,981, from 1988 to 2023. Nothing else is close.'],
+    ['How many lines are in the Iliad?', 15693, 'lines', '15,693 lines of dactylic hexameter, and it covers about seven weeks of a ten-year war.'],
+    ['How many dollars come in a Monopoly box?', 20580, 'dollars', '$20,580 in the current US edition. It was $15,140 until 2008.'],
+    ['How many LEDs are on the Times Square New Year\'s ball?', 32256, 'LEDs', '32,256 LEDs behind 2,688 Waterford crystal panels. It weighs almost six tons.'],
+    ['How many people could the Colosseum hold?', 50000, 'people', 'About 50,000. Some estimates go to 80,000. It emptied in minutes through 80 exits.'],
+    ['How many people live in Brooklyn?', 2736074, 'people', '2,736,074 at the 2020 census. On its own it would be the fourth-largest city in America.'],
+    ['How many rats live in New York City?', 3000000, 'rats', 'About 3 million, per a 2023 estimate. The one-rat-per-person thing was never true.'],
+    ['How many hot dogs do Americans eat on the Fourth of July?', 150000000, 'hot dogs', '150 million, by the hot dog council\'s count. Laid end to end, they\'d reach from DC to LA five times.'],
+    ['How many cups of coffee do Americans drink in a day?', 400000000, 'cups', 'About 400 million, a little over one per person, including the babies.'],
+    ['How many people have ever been born?', 117000000000, 'people', 'About 117 billion, per the Population Reference Bureau. Roughly 7% of them are alive right now.'],
+
+    // ── round three: timing, records, and things that sound made up ──
+    ['How many paintings did Van Gogh sell in his lifetime?', 1, 'painting', 'One. The Red Vineyard, in 1890, for 400 francs. He made about 860 others.'],
+    ['How many seconds long is the shortest song ever released?', 1, 'second', '1.316 seconds. "You Suffer" by Napalm Death, 1987. The complete lyrics are "You suffer, but why?"'],
+    ['How many dogs survived the sinking of the Titanic?', 3, 'dogs', 'Three, all small enough to be carried into a lifeboat: two Pomeranians and a Pekingese.'],
+    ['How many seconds did the fastest knockout in UFC history take?', 5, 'seconds', 'Five. Jorge Masvidal, flying knee, 2019. The walk to the cage took longer.'],
+    ['How many of Sophocles\' plays survive?', 7, 'plays', 'Seven, out of about 120. The rest are quotes and guesses.'],
+    ['How many days were in a week on the French Revolutionary calendar?', 10, 'days', 'Ten, with one day off. Workers hated it. Napoleon scrapped the whole calendar after twelve years.'],
+    ['How many seconds was the fastest goal in World Cup history?', 11, 'seconds', 'Eleven seconds. Hakan Şükür for Turkey against South Korea, 2002.'],
+    ['How many days did Britain skip when it switched calendars in 1752?', 11, 'days', 'Eleven. Wednesday, September 2 was followed by Thursday, September 14. People wanted their eleven days back.'],
+    ['How many time zones does France have?', 12, 'time zones', 'Twelve, counting the overseas territories. More than Russia.'],
+    ['How many publishers turned down the first Harry Potter book?', 12, 'publishers', 'Twelve. The thirteenth paid a £1,500 advance and suggested she get a day job.'],
+    ['How many days did the shortest papacy last?', 13, 'days', 'Thirteen. Urban VII, 1590. He died of malaria before his coronation, but found time to ban smoking in church.'],
+    ['How many horsepower can a horse actually produce?', 15, 'horsepower', 'About 15, for a few seconds. One horsepower is what a horse can keep up all day.'],
+    ['How many seconds would you stay conscious in space without a suit?', 15, 'seconds', 'About 15. You\'d have around 90 before it got permanent. Don\'t hold your breath; your lungs would burst.'],
+    ['How many years did James Joyce spend writing Finnegans Wake?', 17, 'years', 'Seventeen. He called it Work in Progress the entire time.'],
+    ['How many toes does a cat have?', 18, 'toes', 'Eighteen: five on each front paw, four on each back. Unless it\'s one of Hemingway\'s.'],
+    ['How many months did the Pony Express last?', 18, 'months', 'About eighteen. The telegraph reached California in October 1861, and the Pony Express shut down two days later.'],
+    ['How many lifeboats did the Titanic carry?', 20, 'lifeboats', 'Twenty, room for about half the people aboard. That was more than the law required.'],
+    ['How many puppies were in the biggest litter ever recorded?', 24, 'puppies', '24, to a Neapolitan mastiff named Tia, in 2004. Twenty survived.'],
+    ['How many leap seconds have been added to clocks since 1972?', 27, 'leap seconds', '27, the last one in 2016. They\'re being abolished by 2035 because they keep crashing computers.'],
+    ['How many years did a Vestal Virgin serve?', 30, 'years', 'Thirty: ten learning, ten serving, ten teaching. Afterwards they could marry. Almost none did.'],
+    ['How many seconds long is the Jeopardy! thinking music?', 30, 'seconds', 'Thirty, exactly. Merv Griffin wrote it as a lullaby for his son and made about $70 million from it.'],
+    ['How many years until Halley\'s Comet comes back?', 35, 'years', 'It\'s due in July 2061. Mark Twain was born when it came by in 1835 and died when it returned in 1910, as he predicted he would.'],
+    ['How many formulas did it take to get WD-40 right?', 40, 'formulas', 'Forty. The name means Water Displacement, 40th attempt. They\'ve never changed it.'],
+    ['How many cups of coffee a day did Balzac drink?', 50, 'cups', 'Fifty, allegedly, while writing all night. He died at 51, which may or may not be related.'],
+    ['How many hours did the longest kiss last?', 58, 'hours', '58 hours and 35 minutes, in Thailand in 2013. They were allowed to drink through straws.'],
+    ['How many seconds did the Wright brothers\' longest flight on the first day last?', 59, 'seconds', '59 seconds, on the fourth try. The first flight that morning lasted 12.'],
+    ['How many points did Kobe Bryant score in his final game?', 60, 'points', 'Sixty, at 37 years old, on 50 shots. Then he retired on the spot.'],
+    ['How many tattoos did Ötzi the Iceman have?', 61, 'tattoos', '61, mostly lines and crosses over his joints, probably for pain. He\'s 5,300 years old.'],
+    ['How many people survived the Hindenburg?', 62, 'people', '62 of the 97 on board. Most people guess zero. It burned in about 34 seconds.'],
+    ['How many days did the Mayflower take to cross the Atlantic?', 66, 'days', '66 days. The same trip takes seven hours now, and the food is also bad.'],
+    ['How many children did the most prolific mother in history have?', 69, 'children', '69, allegedly: 16 pairs of twins, 7 sets of triplets and 4 sets of quadruplets, in 18th-century Russia. Nobody has checked.'],
+    ['How many years did the first Oxford English Dictionary take to finish?', 70, 'years', 'Seventy, from 1857 to 1928. The plan was ten.'],
+    ['How many years did Louis XIV reign?', 72, 'years', '72 years and 110 days, the longest of any monarch. He became king at four.'],
+    ['How many letters are in the Khmer alphabet?', 74, 'letters', '74, the most of any alphabet. The fewest is Rotokas, in Papua New Guinea, with 12.'],
+    ['How many cards are in a tarot deck?', 78, 'cards', '78: 22 trumps and 56 ordinary playing cards. It was a trick-taking game for 400 years before anyone told fortunes with it.'],
+    ['How many ways are there to tie a necktie?', 85, 'ways', '85, by a 1999 count from two Cambridge physicists. A 2014 recount with looser rules found 177,147.'],
+    ['How many years did the longest marriage last?', 86, 'years', '86 years and 290 days. Herbert and Zelmyra Fisher of North Carolina, married in 1924.'],
+    ['How many seconds was a medieval "moment"?', 90, 'seconds', 'Ninety. An hour had 40 moments. "Just a moment" used to be a real measurement.'],
+    ['How many seconds long is the shortest scheduled airline flight?', 90, 'seconds', 'About 90 seconds, between two islands in Orkney, Scotland. The record with a tailwind is 53.'],
+    ['How many years has the pitch drop experiment been running?', 99, 'years', 'Since 1927, at the University of Queensland. Nine drops have fallen. Nobody there has ever seen one go.'],
+    ['How many Dalmatians?', 101, 'Dalmatians', 'You knew this one.'],
+    ['How many beats per minute is "Stayin\' Alive"?', 103, 'bpm', '103, which is why it\'s the song they teach for CPR. "Another One Bites the Dust" is also the right tempo, but nobody recommends it.'],
+    ['How many takes did Kubrick shoot of the baseball-bat scene in The Shining?', 127, 'takes', '127, a record. Shelley Duvall\'s hair started falling out.'],
+    ['How many goals were scored in the most lopsided soccer match ever?', 149, 'goals', '149 to 0, Madagascar, 2002. The losing side scored every one of them, on purpose, into their own net, to protest a refereeing decision.'],
+    ['How many rooms does the Winchester Mystery House have?', 160, 'rooms', '160, built nonstop for 38 years by the Winchester rifle heiress, with stairs to nowhere and doors onto thin air.'],
+    ['How many decibels was the loudest sound in recorded history, heard from 100 miles away?', 172, 'decibels', 'Krakatoa, 1883. 172 decibels at 100 miles. It was heard in Australia, 3,000 miles off.'],
+    ['How old is Jonathan, the oldest living land animal?', 193, 'years', 'About 193. A giant tortoise on St Helena, hatched around 1832. He is blind, has no sense of smell, and is doing great.'],
+    ['How many years did the Leaning Tower of Pisa take to build?', 199, 'years', '199, from 1173 to 1372. It started leaning five years in. The long pauses for wars are probably what saved it.'],
+    ['How many seconds long is John Cage\'s 4′33″?', 273, 'seconds', '273 seconds of the performer not playing. There are three movements.'],
+    ['How many bathrooms does the Pentagon have?', 284, 'bathrooms', '284, twice what it needed. Virginia\'s segregation laws in 1941 required separate facilities. They were built, but never labeled.'],
+    ['How many ways are there to make change for a dollar?', 293, 'ways', '293, using pennies, nickels, dimes, quarters, half dollars and the dollar coin.'],
+    ['How many days were in the original Roman year?', 304, 'days', '304, over ten months. The sixty-odd days of winter simply weren\'t counted. Nobody needed them.'],
+    ['How many years did the longest war in history last?', 335, 'years', 'The 335 Years\' War, between the Netherlands and the Isles of Scilly. Nobody fired a shot. A peace treaty was finally signed in 1986.'],
+    ['How many licks does it take to get to the center of a Tootsie Pop?', 364, 'licks', '364, according to a licking machine built at Purdue. Human volunteers averaged 252.'],
+    ['How many days long was the longest year in history?', 445, 'days', '445. In 46 BC Julius Caesar fixed the calendar, and the Romans called it the year of confusion.'],
+    ['How many years old was the oldest animal ever found?', 507, 'years', '507. Ming, an ocean quahog clam dredged up off Iceland in 2006. The scientists worked out its age by opening it, which killed it.'],
+    ['How many characters are in War and Peace?', 559, 'characters', '559 named characters. About 200 of them were real people.'],
+    ['How many words per minute did the world\'s fastest talker reach?', 637, 'words', '637 words per minute. Steve Woodmore, 1990. Normal conversation is about 150.'],
+    ['How many years will the longest piece of music take to perform?', 639, 'years', 'John Cage\'s As Slow As Possible, playing on a church organ in Halberstadt, Germany, since 2001. It ends in 2640. Chord changes draw a crowd.'],
+    ['How many minutes did the longest tennis match last?', 665, 'minutes', 'Eleven hours and five minutes, over three days at Wimbledon in 2010. Isner beat Mahut 70–68 in the fifth set.'],
+    ['How many miles would the Proclaimers walk, in total?', 1000, 'miles', '500, and 500 more. Nobody has ever checked whether they did.'],
+    ['How many words did the smartest dog know?', 1022, 'words', '1,022. A border collie named Chaser, mostly the names of her toys. She could also sort them by shape.'],
+    ['How many patents did Thomas Edison hold?', 1093, 'patents', '1,093 in the US alone. A fair number of them were other people\'s ideas first.'],
+    ['How many years did the ancient Olympic Games run?', 1169, 'years', '1,169, from 776 BC until the emperor Theodosius shut them down in AD 393. The modern Games are at 130.'],
+    ['How many legs does the leggiest millipede have?', 1306, 'legs', '1,306. Found in 2021, 200 feet underground in Western Australia. Every other millipede\'s name was a lie.'],
+    ['How many seconds did the longest breath-hold last?', 1477, 'seconds', '24 minutes and 37 seconds. Budimir Šobat, 2021, after breathing pure oxygen first. Without it, the record is about eleven and a half minutes.'],
+    ['How many lines does Hamlet speak in Hamlet?', 1500, 'lines', 'About 1,500, nearly 40% of the play. It depends on the edition, and on the actor.'],
+    ['How many minutes did the longest speech in US Senate history last?', 1505, 'minutes', '25 hours and 5 minutes. Cory Booker, April 2025, breaking Strom Thurmond\'s 1957 record by 47 minutes without sitting down.'],
+    ['How many consecutive games did Cal Ripken Jr. play?', 2632, 'games', '2,632, over sixteen seasons. He ended the streak himself, by asking for a night off.'],
+    ['How many years old is the oldest written recipe?', 3700, 'years', 'About 3,700. Babylonian lamb stew, on a clay tablet. People have cooked it. It\'s fine.'],
+    ['How many years old is the oldest known joke?', 3900, 'years', 'About 3,900. It\'s Sumerian, and it\'s a fart joke about a wife on her husband\'s lap.'],
+    ['How many years ago did the last woolly mammoths die?', 4000, 'years ago', 'About 4,000, on Wrangel Island in the Arctic. The pyramids were already 500 years old.'],
+    ['How many years did the Maya Long Count calendar run before it rolled over in 2012?', 5125, 'years', '5,125. The world did not end. The calendar started over, like an odometer.'],
+    ['How many years old is the oldest known shoe?', 5500, 'years', '5,500. A leather moccasin from a cave in Armenia, stuffed with grass, about a US women\'s size 7.'],
+    ['How many windows does the Empire State Building have?', 6514, 'windows', '6,514. They are cleaned in a cycle that never ends.'],
+    ['How many Greeks fought at Thermopylae?', 7000, 'soldiers', 'About 7,000, not 300. The 300 Spartans were the ones who stayed for the last day.'],
+    ['How many words was William Henry Harrison\'s inaugural address?', 8445, 'words', '8,445, the longest ever, delivered in the cold without a coat. He was dead in 31 days.'],
+    ['How many pieces are in the biggest LEGO set?', 11695, 'pieces', '11,695: the World Map, a mosaic. The Titanic is 9,090.'],
+    ['How many years ago did humans start brewing beer?', 13000, 'years ago', 'About 13,000, in a cave near Haifa. That may be before bread, which raises a question about why we started farming.'],
+    ['How many backers did Exploding Kittens have on Kickstarter?', 219382, 'backers', '219,382, in 2015, still the most of any project in Kickstarter history. Wavelength had 8,674.'],
+    ['How many people lived in ancient Rome at its peak?', 1000000, 'people', 'About a million, around AD 100. No city got that big again until London in 1800.'],
+    ['How many words long is Proust\'s In Search of Lost Time?', 1267000, 'words', 'About 1.27 million, the longest novel there is. All seven Harry Potters together come to 1.08 million.'],
+    ['How many men alive today descend from Genghis Khan?', 16000000, 'men', 'About 16 million, one in every 200 men on Earth, according to a 2003 study of Y chromosomes.'],
+    ['How many objects are in the Smithsonian\'s collections?', 157000000, 'objects', 'About 157 million. Less than 1% is on display at any time.'],
+    ['How many people watched the Moon landing live?', 600000000, 'people', 'About 600 million, a fifth of everyone alive. NASA later taped over the original recordings.'],
+
+    // ── round four: pop culture, brands, the internet, and other nonsense ──
+    ['How many different flavors are in a box of Froot Loops?', 1, 'flavor', 'One. They\'re all the same flavor. The colors are a lie you\'ve been living with since childhood.'],
+    ['How many countries can\'t you officially buy a Coca-Cola in?', 2, 'countries', 'Two: Cuba and North Korea. Everywhere else, including Antarctica, is covered.'],
+    ['How many shades of green could the original Game Boy display?', 4, 'shades', 'Four. Pea soup to swamp. It outsold almost everything.'],
+    ['How many shapes does a Chicken McNugget come in?', 4, 'shapes', 'Four: the ball, the bell, the boot and the bone. McDonald\'s says it\'s so they cook evenly. Sure.'],
+    ['How many million dollars did Logan Paul pay for the most expensive Pokémon card?', 5, 'million', '$5.275 million for a Pikachu Illustrator card, 2022. He wore it on a chain to WrestleMania.'],
+    ['How many million dollars did a banana duct-taped to a wall sell for in 2024?', 6, 'million', '$6.2 million, at Sotheby\'s. The buyer, a crypto founder, ate it at a press conference. The tape was not included in the meal.'],
+    ['How many seconds long was a Vine?', 6, 'seconds', 'Six. Do it for the Vine. Twitter shut it down in 2017 and then invented TikTok\'s whole business for them.'],
+    ['How many Sharknado movies are there?', 6, 'movies', 'Six, from 2013 to 2018. The last one is called The Last Sharknado: It\'s About Time. It was.'],
+    ['How many Horcruxes did Voldemort make?', 7, 'Horcruxes', 'Seven on purpose. Eight if you count Harry, which he didn\'t mean to do.'],
+    ['How many fingers does Homer Simpson have?', 8, 'fingers', 'Eight. Four per hand, like nearly every cartoon character. God has five, in one episode.'],
+    ['How many times was Elizabeth Taylor married?', 8, 'times', 'Eight, to seven men. Richard Burton got two turns.'],
+    ['How many times has Glenn Close been nominated for an Oscar without winning?', 8, 'times', 'Eight. The most of any living actor. She has a Fatal Attraction costume collection in storage, waiting.'],
+    ['How many original members were in the Wu-Tang Clan?', 9, 'members', 'Nine. Ten if you count Cappadonna, which depends on who you ask and when.'],
+    ['How many wings do guests eat on Hot Ones?', 10, 'wings', 'Ten, hottest last. The questions get better as the guests get worse.'],
+    ['How many parsecs did the Millennium Falcon make the Kessel Run in?', 12, 'parsecs', 'Less than twelve. A parsec is a unit of distance, and the fandom has spent 45 years explaining why that\'s fine.'],
+    ['How many children does Nick Cannon have?', 12, 'children', 'Twelve, with six women, at the last count. Check the news; the count may have moved.'],
+    ['How many employees did Instagram have when Facebook bought it for a billion dollars?', 13, 'employees', 'Thirteen. About $77 million per person. None of them were called Kevin, except the founder.'],
+    ['How many holes are on top of a Croc?', 13, 'holes', 'Thirteen, for ventilation and Jibbitz. You know what Jibbitz are. Don\'t pretend.'],
+    ['How many Land Before Time movies are there?', 14, 'movies', 'Fourteen. The first one is a masterpiece and the other thirteen are direct to video.'],
+    ['How many Grammys has Taylor Swift won?', 14, 'Grammys', 'Fourteen, including a record four Album of the Year wins.'],
+    ['How many weeks was "Old Town Road" number one?', 19, 'weeks', 'Nineteen, a record. It was kicked off the country chart first, which is the only reason you\'ve heard of it.'],
+    ['How many pages is the Cheesecake Factory menu?', 21, 'pages', 'Twenty-one pages, about 250 items, and somehow they\'re all good. Nobody understands how.'],
+    ['How many flavors does Dr Pepper claim to blend?', 23, 'flavors', 'Twenty-three, never officially listed. The internet says prune. Dr Pepper says absolutely not.'],
+    ['How many years did it take "All I Want for Christmas Is You" to hit number one?', 25, 'years', 'Twenty-five. Released 1994, number one in December 2019. It has gone back every December since.'],
+    ['How many corgis did Queen Elizabeth II own over her reign?', 30, 'corgis', 'More than thirty, almost all descended from Susan, her 18th birthday present in 1944.'],
+    ['How many minutes did the Beatles\' rooftop concert last?', 42, 'minutes', '42 minutes, January 1969, until the police came up. It was their last show ever.'],
+    ['How many days is the shelf life of a Twinkie?', 45, 'days', '45 days. Not forever. A 44-year-old one in a Maine school was studied in 2020 and had mostly turned to dust.'],
+    { m: ['How many kilograms did the heaviest cat on record weigh?', 21, 'kg', '21.3 kg. Himmy, from Australia, 1986. He had to be carried from room to room. Guinness has since retired the category to stop people trying.'],
+      i: ['How many pounds did the heaviest cat on record weigh?', 47, 'pounds', '46 pounds 15 ounces. Himmy, from Australia, 1986. He had to be carried from room to room. Guinness has since retired the category to stop people trying.'] },
+    ['How many million dollars did Blockbuster turn down Netflix for in 2000?', 50, 'million', 'Fifty. Netflix offered to sell itself for $50 million. Blockbuster\'s CEO laughed them out of the room. There is one Blockbuster left, in Bend, Oregon.'],
+    ['How many hours did Britney Spears\' first marriage last?', 55, 'hours', '55 hours, Las Vegas, January 2004. Annulled on grounds that she "lacked understanding of her actions."'],
+    ['How many eggs does Gaston eat every morning?', 60, 'eggs', 'Five dozen, up from four dozen as a lad. That is roughly the size of a barge.'],
+    ['How many days did Kim Kardashian\'s marriage to Kris Humphries last?', 72, 'days', '72 days. The wedding special was two parts and ran longer than some marriages.'],
+    ['How many Jeopardy! games did Ken Jennings win in a row?', 74, 'games', '74, in 2004, for $2.5 million. He lost on a question about H&R Block.'],
+    ['How many Years of Solitude?', 100, 'years', 'One hundred. You read the title. Or at least the spine.'],
+    ['How many characters was a tweet originally limited to?', 140, 'characters', '140: a text message was 160, minus 20 for your username. The limit was set by a phone standard from 1985.'],
+    ['How many million dollars did the most expensive car ever sold go for?', 142, 'million', '$142 million for a 1955 Mercedes-Benz 300 SLR, in 2022. There are two. Mercedes kept the other one.'],
+    ['How many Pokémon were there in the first generation?', 151, 'Pokémon', '151. You could name them all once. Mew was the secret one under the truck, which was a lie.'],
+    ['How many levels of Pac-Man can you actually play?', 255, 'levels', '255. The 256th is half garbage, because the level counter runs out of room. A perfect game stops there.'],
+    ['How many popes have there been?', 267, 'popes', '267, as of Leo XIV in 2025. The count includes one who was tried after he was dead.'],
+    ['How many cubits long was Noah\'s Ark?', 300, 'cubits', '300 cubits by 50 by 30. About 450 feet. For every animal.'],
+    ['How many gifts are given in total in "The Twelve Days of Christmas"?', 364, 'gifts', '364, one short of a year. Forty of them are birds. Twenty-three of those are the same calling birds, over and over.'],
+    ['How many players were in Squid Game?', 456, 'players', '456, for 45.6 billion won, which is about $38 million. Per player it works out to a lot of marbles.'],
+    ['How many apps were in the App Store the day it opened in 2008?', 500, 'apps', 'Five hundred. One of them was a $999.99 app called I Am Rich that did nothing. Eight people bought it before Apple pulled it.'],
+    ['How many times is the F-word said in The Wolf of Wall Street?', 569, 'times', 'About 569, a record for a non-documentary at the time. That\'s one every 19 seconds for three hours.'],
+    ['How many thousand dollars did the "Charlie Bit My Finger" video sell for as an NFT?', 761, 'thousand', '$760,999, in 2021. The family said they\'d delete it from YouTube. They didn\'t.'],
+    ['How many rooms does Buckingham Palace have?', 775, 'rooms', '775: 52 royal and guest bedrooms, 188 staff bedrooms, 92 offices and 78 bathrooms.'],
+    ['How old was Yoda when he died?', 900, 'years', '900. "When 900 years old you reach, look as good you will not." He still had the energy for the backflips, somehow.'],
+    ['How many years did Methuselah live, according to Genesis?', 969, 'years', '969, the all-time record. The verified human record is 122, and she smoked until she was 117.'],
+    ['How many dollars did the "I Am Rich" iPhone app cost?', 1000, 'dollars', '$999.99, in 2008. It showed a glowing red gem. Eight people bought it before Apple took it down, and at least two said it was a mistake.'],
+    ['How many million dollars did the Barbie movie make?', 1446, 'million', '$1.446 billion worldwide. The biggest movie of 2023, and the biggest ever directed by a woman. Oppenheimer made less than a billion.'],
+    ['How many words are in Eminem\'s "Rap God"?', 1560, 'words', '1,560 in six minutes and four seconds. In the fastest stretch he hits about ten words a second.'],
+    ['How many calories are in an Outback Bloomin\' Onion?', 1950, 'calories', '1,954, with the sauce. About a day\'s worth, as an appetizer.'],
+    { m: ['How many kilograms did the heaviest pumpkin ever weigh?', 1247, 'kg', '1,247 kg, grown in Minnesota in 2023. About the weight of a small car, and far less useful.'],
+      i: ['How many pounds did the heaviest pumpkin ever weigh?', 2749, 'pounds', '2,749 pounds, grown in Minnesota in 2023. About the weight of a small car, and far less useful.'] },
+    ['How many bitcoins did the first real-world Bitcoin purchase cost?', 10000, 'bitcoins', '10,000 bitcoins for two Papa John\'s pizzas, May 2010. Try not to think about what that\'s worth now. He says he doesn\'t.'],
+    ['How many balloons did Pixar animate lifting the house in Up?', 10297, 'balloons', '10,297 in the liftoff shot. Real-world estimate for lifting a real house: about 23 million.'],
+    ['How many leagues under the sea?', 20000, 'leagues', 'Twenty thousand. It\'s how far they travel, not how deep they go. The ocean is about three leagues deep at most.'],
+    ['How many words are in the musical Hamilton?', 20520, 'words', '20,520 words in two and a half hours. At that pace, a normal musical would run about six hours.'],
+    ['How many drink combinations does Starbucks say are possible?', 87000, 'combinations', '87,000, by their own count from 2008. It\'s more now. Most of them are a mistake.'],
+    ['How many calories are in a human body?', 125000, 'calories', 'About 125,000, according to a 2017 paper on prehistoric cannibalism. The author\'s conclusion was that it wasn\'t worth the effort.'],
+    ['How many Pet Rocks were sold in 1975?', 1500000, 'Pet Rocks', 'About 1.5 million, at $3.95 each, in about six months. It came with a manual and a bed of straw. The inventor became a millionaire. The rock did nothing.'],
+    ['How many Scoville units is Pepper X, the hottest pepper in the world?', 2693000, 'Scoville units', '2,693,000. A jalapeño is about 5,000. The man who bred it ate one on camera and lay on the floor for an hour.'],
+    ['How many languages can C-3PO speak?', 6000000, 'forms of communication', 'Over six million forms of communication. Still can\'t get a door open in a hurry.'],
+    ['How many downloads did Flappy Bird have when its creator pulled it?', 50000000, 'downloads', 'About 50 million, making $50,000 a day from ads. He deleted it because he said it was too addictive. Phones with it installed sold for thousands.'],
+    ['How many likes does the Instagram egg have?', 60000000, 'likes', 'About 60 million. In 2019 a stock photo of an egg beat Kylie Jenner for the most-liked post ever. The egg later cracked, for mental health awareness.'],
+    ['How many hot dog combos does Costco sell in a year?', 200000000, 'hot dogs', 'About 200 million, at $1.50, the same price as 1985. The co-founder once told the CEO he\'d kill him if he raised it.'],
+    ['How many copies has Minecraft sold?', 300000000, 'copies', '300 million and counting, the best-selling game ever. Microsoft paid $2.5 billion for it in 2014, which turned out to be a bargain.'],
+    { m: ['How tall was Napoleon, in centimeters?', 168, 'cm', 'About 168 cm, slightly above average for a Frenchman of his day. His autopsy said 5 foot 2, but in French inches, which were bigger. The British ran with it, and he was usually standing next to his Imperial Guard, who were all enormous.'],
+      i: ['How tall was Napoleon, in inches?', 66, 'inches', 'About 5 foot 6, slightly above average for a Frenchman of his day. His autopsy said 5 foot 2, but in French inches, which were bigger. The British ran with it, and he was usually standing next to his Imperial Guard, who were all enormous.'] }
+  ];
+
+  const EMOJI = ['🦊','🐸','🐙','🦄','🐢','🦩','🐝','🦕','🍄','🌵','🎃','👻','🤖','👽','🐧','🦔','🥑','🍕','🌈','🦋','🐳','🦀','🍩','🚀'];
+
+  // ───────────── helpers ─────────────
+  const $ = (id) => document.getElementById(id);
+  const fmt = (n) => Math.floor(n).toLocaleString('en-US');
+  const shuffle = (arr) => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const store = {
+    get(k, fallback) { try { const v = localStorage.getItem(k); return v === null ? fallback : JSON.parse(v); } catch (e) { return fallback; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage unavailable: fine */ } },
+    del(k) { try { localStorage.removeItem(k); } catch (e) { /* fine */ } }
+  };
+  const vibrate = (p) => { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) { /* fine */ } };
+
+  // ───────────── sound (tiny synth, unlocked by the first tap) ─────────────
+  const sound = (() => {
+    let ctx = null;
+    let on = store.get('notyet.sound', true) !== false;
+    function ensure() {
+      if (!on) return null;
+      try {
+        if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+        if (ctx.state === 'suspended') ctx.resume();
+        return ctx;
+      } catch (e) { return null; }
+    }
+    function beep(freq, dur, type, gain, when) {
+      const c = ensure(); if (!c) return;
+      try {
+        const t = c.currentTime + (when || 0);
+        const o = c.createOscillator(), g = c.createGain();
+        o.type = type; o.frequency.value = freq;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(gain, t + 0.006);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        o.connect(g).connect(c.destination);
+        o.start(t); o.stop(t + dur + 0.03);
+      } catch (e) { /* fine */ }
+    }
+    return {
+      get on() { return on; },
+      set(v) { on = !!v; store.set('notyet.sound', on); if (on) ensure(); return on; },
+      unlock() { ensure(); },
+      tick()  { beep(1500, 0.035, 'square', 0.025, 0); },
+      click() { beep(900, 0.05, 'triangle', 0.06, 0); },
+      buzz()  { beep(110, 0.28, 'sawtooth', 0.09, 0); },
+      ding()  { beep(660, 0.12, 'triangle', 0.09, 0); beep(990, 0.26, 'triangle', 0.09, 0.1); },
+      bull()  { beep(660, 0.1, 'triangle', 0.09, 0); beep(990, 0.1, 'triangle', 0.09, 0.09); beep(1320, 0.4, 'triangle', 0.1, 0.18); },
+      dead()  { beep(220, 0.18, 'sawtooth', 0.07, 0); beep(165, 0.45, 'sawtooth', 0.07, 0.18); }
+    };
+  })();
+
+  // ───────────── units ─────────────
+  let units = store.get('notyet.units', 'imperial') === 'metric' ? 'metric' : 'imperial';
+  let autoStart = store.get('notyet.autostart', true) !== false;   // the count starts with the question, not on a tap
+  const norm = (e) => Array.isArray(e) ? { m: e, i: e } : { m: e.m, i: e.i || e.m };
+  const variant = (e) => (units === 'metric' ? e.m : e.i);
+
+  // ───────────── deck ─────────────
+  function lineOf(v) { return [v[0], Number(v[1]).toLocaleString('en-US'), v[2] || '', v[3] || ''].join(' | '); }
+  function serializeDeck(d) {
+    return d.map(e => (e.i === e.m ? lineOf(e.m) : lineOf(e.m) + ' || ' + lineOf(e.i))).join('\n');
+  }
+  function parseVariant(seg) {
+    const parts = seg.split('|').map(s => s.trim());
+    if (parts.length < 2) return null;
+    const a = Number(parts[1].replace(/[,_\s]/g, ''));
+    if (!parts[0] || !isFinite(a) || a <= 0) return null;
+    return [parts[0], a, parts[2] || '', parts.slice(3).join(' | ')];
+  }
+  function parseDeck(text) {
+    const out = []; let bad = 0;
+    for (const raw of text.split('\n')) {
+      const line = raw.trim();
+      if (!line || line.startsWith('#')) continue;
+      const segs = line.split('||');
+      const m = parseVariant(segs[0]);
+      if (!m) { bad++; continue; }
+      let i = m;
+      if (segs[1] !== undefined) { const v = parseVariant(segs[1]); if (v) i = v; else bad++; }
+      out.push({ m, i });
+    }
+    return { deck: out, bad };
+  }
+  function loadDeck() {
+    const saved = store.get('notyet.deck', null);
+    if (typeof saved === 'string') { const p = parseDeck(saved); if (p.deck.length) return p.deck; }
+    return DEFAULT_DECK.map(norm);
+  }
+  let deck = loadDeck();
+
+  function pickQuestions() {
+    const all = deck.map(variant);
+    const small = shuffle(all.filter(d => d[1] <= SMALL_MAX));
+    const medium = shuffle(all.filter(d => d[1] > SMALL_MAX && d[1] < 10000));
+    const big = shuffle(all.filter(d => d[1] >= 10000));
+    let chosen = [...small.slice(0, PICK.small), ...medium.slice(0, PICK.medium), ...big.slice(0, PICK.big)];
+    if (chosen.length < ROUNDS) {
+      const rest = shuffle(all.filter(d => !chosen.includes(d)));
+      chosen = chosen.concat(rest.slice(0, ROUNDS - chosen.length));
+    }
+    return shuffle(chosen).slice(0, ROUNDS);
+  }
+
+  // The speed rule. Every round reaches its answer after a random T_MIN–T_MAX seconds, so the
+  // rate tells you the rough scale and nothing more. Small answers are capped so they never
+  // crawl slower than one tick a second: a 7 is over in at most seven seconds.
+  function rateFor(answer) {
+    let secs = T_MIN + Math.random() * (T_MAX - T_MIN);
+    secs = Math.max(T_MIN, Math.min(secs, answer));
+    return answer / secs;
+  }
+
+  // ───────────── state ─────────────
+  const state = {
+    phase: 'start', round: 0, total: ROUNDS, questions: [], players: [], pool: [],
+    tooEarly: 0, unclaimed: 0, dead: 0, bullseyes: 0, current: null, pts: 1, after: 0, bullseye: false, celeTimer: 0, celeSkipAt: 0,
+    paused: false, pausedPhase: '', pausedAt: 0, quitTimer: 0,
+    rate: 0, t0: 0, displayed: 0, running: false, lockUntil: 0, raf: 0, minLen: 1, lastLen: 0, cw: 0.62, earlyTimer: 0, armTimer: 0
+  };
+
+  function show(name) {
+    for (const s of document.querySelectorAll('.screen')) s.hidden = (s.id !== 'screen-' + name);
+    const inGame = name === 'round' || name === 'result' || name === 'newplayer';
+    $('roundLabel').textContent = inGame ? `Round ${state.round} of ${state.total}` : (name === 'end' ? 'Final' : '');
+    $('pauseBtn').hidden = !inGame;
+    if (!inGame) delete document.body.dataset.ink;
+    $('scores').hidden = !(inGame || name === 'end') || state.players.length === 0;
+    document.querySelector('#screen-' + name).scrollTop = 0;
+  }
+
+  function renderScores() {
+    const el = $('scores'); el.innerHTML = '';
+    for (const p of state.players) {
+      const c = document.createElement('span'); c.className = 'chip';
+      const e = document.createElement('span'); e.className = 'e'; e.textContent = p.e;
+      const n = document.createElement('span'); n.textContent = p.score;
+      c.append(e, n); el.appendChild(c);
+    }
+    el.hidden = state.players.length === 0;
+  }
+
+  function renderStart() {
+    const all = deck.map(variant);
+    const small = all.filter(d => d[1] <= SMALL_MAX).length, big = all.filter(d => d[1] >= 10000).length;
+    const withUnits = deck.filter(e => e.i !== e.m).length;
+    $('deckInfo').textContent = `${deck.length} questions in the deck (${small} small, ${deck.length - small - big} medium, ${big} big). Ten per game, ${units} units.`;
+    $('settingsDeckInfo').textContent = `${deck.length} questions, ${withUnits} of them with a version in each unit system. Add your own, or cut the ones you don't like.`;
+  }
+
+  // ───────────── game flow ─────────────
+  function newGame() {
+    state.questions = pickQuestions();
+    state.total = state.questions.length;
+    state.round = 0; state.players = []; state.pool = shuffle(EMOJI); state.tooEarly = 0; state.unclaimed = 0; state.dead = 0; state.bullseyes = 0;
+    sound.unlock();
+    renderScores();
+    startRound();
+  }
+
+  function startRound() {
+    stopCount();
+    state.round++;
+    state.current = state.questions[state.round - 1];
+    document.body.dataset.ink = 'mcyto'[(state.round - 1) % 5];            // each round takes the next color
+    $('qText').textContent = state.current[0];
+    $('qBand').textContent = `Question ${state.round}`;
+    const num = $('num');
+    num.classList.add('is-label'); num.style.fontSize = ''; num.textContent = 'Start';
+    $('sub').hidden = false;
+    $('giveUp').hidden = true; disarmGiveUp();
+    $('bigBtn').classList.remove('early', 'down');
+    state.phase = 'ready'; state.lastLen = 0;
+    show('round');
+    if (autoStart) startCount();
+  }
+
+  function startCount() {
+    const a = state.current[1];
+    state.rate = rateFor(a);
+    state.minLen = fmt(state.rate * T_MAX).length;   // size the digits for where the count is headed, from the rate alone
+    state.displayed = 0;
+    state.t0 = performance.now();
+    state.lockUntil = state.t0 + START_LOCK_MS;
+    state.running = true; state.phase = 'counting';
+    const num = $('num');
+    num.classList.remove('is-label'); num.textContent = '0';
+    $('sub').hidden = true; $('giveUp').hidden = false;
+    state.cw = charWidth();
+    fitNum(1);
+    sound.click();
+    state.raf = requestAnimationFrame(loop);
+  }
+
+  function loop(ts) {
+    if (!state.running) return;
+    const v = (ts - state.t0) / 1000 * state.rate;
+    const d = Math.floor(v);
+    if (d !== state.displayed) {
+      state.displayed = d;
+      const s = fmt(d);
+      $('num').textContent = s;
+      fitNum(s.length);
+      if (state.rate <= TICK_RATE_MAX) sound.tick();
+    }
+    if (v >= state.current[1] * DEAD_MULT) { deadRound(); return; }
+    state.raf = requestAnimationFrame(loop);
+  }
+
+  // Width of one digit in the number font, in ems, measured rather than guessed (commas are the same width in a monospace face).
+  function charWidth() {
+    try {
+      const c = document.createElement('canvas').getContext('2d');
+      c.font = `800 100px ${getComputedStyle($('num')).fontFamily}`;
+      const w = c.measureText('0').width / 100;
+      return w > 0.3 && w < 1 ? w : 0.62;
+    } catch (e) { return 0.62; }
+  }
+
+  // The biggest font size at which L characters still fit inside the circle: the text's bounding
+  // box is a rectangle centred in the disc, so its corner has to stay inside the rim.
+  function fitNum(len) {
+    const L = Math.max(len, state.minLen);
+    if (L === state.lastLen) return;
+    state.lastLen = L;
+    const d = $('bigBtn').clientWidth; if (!d) return;
+    const r = d / 2 * 0.94;                               // a little air inside the rim
+    const halfW = L * (state.cw || 0.62) / 2, halfH = 0.37; // in ems: half the text width, half a digit's height
+    const size = Math.min(d * 0.8, r / Math.hypot(halfW, halfH));
+    $('num').style.fontSize = Math.max(22, Math.floor(size)) + 'px';
+  }
+
+  function stopCount() {
+    state.running = false;
+    cancelAnimationFrame(state.raf);
+    clearTimeout(state.earlyTimer);
+    $('badge').classList.remove('show');
+    $('bigBtn').classList.remove('early');
+  }
+
+  function onBigTap() {
+    const now = performance.now();
+    if (state.phase === 'ready') { sound.unlock(); startCount(); return; }
+    if (state.phase !== 'counting' || now < state.lockUntil) return;
+    const a = state.current[1];
+    const elapsed = (now - state.t0) / 1000;
+    if (Math.floor(elapsed * state.rate) >= a) correct(elapsed - a / state.rate); else tooEarly(now);
+  }
+
+  function tooEarly(now) {
+    state.tooEarly++;
+    state.lockUntil = now + EARLY_LOCK_MS;
+    sound.buzz(); vibrate(60);
+    const b = $('bigBtn'), badge = $('badge');
+    b.classList.remove('early'); void b.offsetWidth; b.classList.add('early');
+    badge.classList.add('show');
+    clearTimeout(state.earlyTimer);
+    state.earlyTimer = setTimeout(() => { badge.classList.remove('show'); b.classList.remove('early'); }, EARLY_SHOW_MS);
+  }
+
+  function correct(after) {
+    stopCount();
+    state.after = Math.max(0, after);
+    state.bullseye = state.after <= BULLSEYE_SECS;
+    state.pts = state.bullseye ? 2 : 1;
+    if (state.bullseye) { state.bullseyes++; sound.bull(); vibrate([30, 40, 30, 40, 80]); }
+    else { sound.ding(); vibrate([30, 40, 30]); }
+    celebrate();
+  }
+
+  // ───────────── celebration ─────────────
+  const reduceMotion = (() => { try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } })();
+  const WIN_LINES = ['You got it!', 'Nailed it.', 'That\'s the one.', 'Yes!', 'Right on.', 'Got it!', 'Ding ding.'];
+  const confetti = (() => {
+    let parts = [], raf = 0, cv = null, ctx = null, running = false;
+    function size() {
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      cv.width = Math.floor(innerWidth * dpr); cv.height = Math.floor(innerHeight * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    function burst(n, x, y, colors, power, dirX) {
+      for (let i = 0; i < n; i++) {
+        const ang = Math.random() * Math.PI * 2, sp = (0.35 + Math.random() * 0.65) * power;
+        let vx = Math.cos(ang) * sp, vy = Math.sin(ang) * sp - power * 0.35;
+        if (dirX) { vx = Math.abs(vx) * dirX; vy = -Math.abs(vy) - power * 0.3; }
+        parts.push({ x, y, vx, vy, w: 6 + Math.random() * 8, h: 4 + Math.random() * 6, rot: Math.random() * Math.PI, vr: (Math.random() - 0.5) * 0.4,
+                     c: colors[Math.floor(Math.random() * colors.length)] });
+      }
+    }
+    function tick() {
+      if (!running) return;
+      ctx.clearRect(0, 0, innerWidth, innerHeight);
+      let alive = 0;
+      for (const p of parts) {
+        p.vy += 0.35; p.vx *= 0.99; p.vy *= 0.995; p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+        if (p.y > innerHeight + 40) continue;
+        alive++;
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.fillStyle = p.c; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); ctx.restore();
+      }
+      if (alive) raf = requestAnimationFrame(tick); else running = false;
+    }
+    return {
+      start(level) {
+        if (reduceMotion) return;
+        try {
+          cv = $('confetti'); ctx = cv.getContext('2d'); if (!ctx) return;
+          size(); parts = []; running = true; cancelAnimationFrame(raf);
+          const W = innerWidth, H = innerHeight;
+          const cmy = ['#EC1C8C', '#3D6BFF', '#FFC629', '#19B5B0', '#FF6B2C', '#FFFFFF'];
+          if (level === 2) {
+            burst(240, W / 2, H * 0.45, cmy, 22, 0);
+            burst(100, 0, H, cmy, 27, 1); burst(100, W, H, cmy, 27, -1);
+            setTimeout(() => { if (running) burst(160, W / 2, H * 0.4, cmy, 19, 0); }, 380);
+          } else {
+            burst(150, W / 2, H * 0.45, ['#FFFFFF', '#121212', '#FFC629'], 18, 0);
+          }
+          raf = requestAnimationFrame(tick);
+        } catch (e) { running = false; }
+      },
+      stop() { running = false; cancelAnimationFrame(raf); if (ctx) { try { ctx.clearRect(0, 0, innerWidth, innerHeight); } catch (e) { /* fine */ } } }
+    };
+  })();
+
+  function celebrate() {
+    const bull = state.bullseye;
+    const el = $('cele');
+    el.classList.toggle('bull', bull);
+    $('celeEyebrow').textContent = `Round ${state.round} of ${state.total}`;
+    const title = $('celeTitle'); title.textContent = '';
+    if (bull) {                                                            // one letter per color
+      'Bullseye!'.split('').forEach((ch, i) => { const s = document.createElement('span'); s.className = 'mcyto'[i % 5]; s.textContent = ch; title.appendChild(s); });
+    } else {
+      title.textContent = WIN_LINES[Math.floor(Math.random() * WIN_LINES.length)];
+    }
+    $('celeNum').textContent = bull ? state.current[1].toLocaleString('en-US') : fmt(state.displayed);   // a bullseye shows the real answer, a plain win the number you hit
+    $('celeUnit').textContent = state.current[2] || '';
+    $('celeChip').hidden = !bull;
+    $('celeSub').hidden = bull;                                     // a bullseye speaks for itself
+    $('celeSub').textContent = bull ? '' : state.after < 0.05 ? 'On the nose' : `${state.after.toFixed(1)} s after it came up`;
+    state.phase = 'cele';
+    el.hidden = false;
+    confetti.start(bull ? 2 : 1);
+    const now = performance.now();
+    state.celeSkipAt = now + 650;                                   // a tap after this skips ahead (slams right after the win don't)
+    clearTimeout(state.celeTimer);
+    state.celeTimer = setTimeout(endCelebration, reduceMotion ? 1200 : bull ? 3000 : 1900);
+  }
+  function endCelebration() {
+    clearTimeout(state.celeTimer);
+    if (state.phase !== 'cele') return;
+    confetti.stop();
+    $('cele').hidden = true;
+    showResult(true);
+  }
+
+  // ───────────── pause / quit ─────────────
+  function pauseGame() {
+    const p = state.phase;
+    if (state.paused || !(p === 'ready' || p === 'counting' || p === 'result' || p === 'newplayer')) return;
+    state.paused = true; state.pausedPhase = p; state.pausedAt = performance.now();
+    if (p === 'counting') { state.running = false; cancelAnimationFrame(state.raf); }   // freeze the clock where it is
+    disarmQuit();
+    $('pauseTitle').textContent = `Round ${state.round} of ${state.total}`;
+    $('pause').hidden = false;
+  }
+  function resumeGame() {
+    if (!state.paused) return;
+    const gap = performance.now() - state.pausedAt;
+    if (state.pausedPhase === 'counting') {
+      state.t0 += gap;                                                         // the count picks up exactly where it stopped
+      state.lockUntil = Math.max(state.lockUntil + gap, performance.now() + 300);
+      state.running = true; state.raf = requestAnimationFrame(loop);
+    }
+    state.paused = false;
+    $('pause').hidden = true;
+  }
+  function quitGame() {
+    const q = $('quitBtn');
+    if (!q.classList.contains('armed')) {
+      q.classList.add('armed'); q.textContent = 'Sure? Tap again to quit';
+      clearTimeout(state.quitTimer); state.quitTimer = setTimeout(disarmQuit, 2500);
+      return;
+    }
+    disarmQuit();
+    stopCount(); confetti.stop(); clearTimeout(state.celeTimer); $('cele').hidden = true;
+    state.paused = false; $('pause').hidden = true;
+    state.phase = 'start'; state.round = 0; state.players = []; renderScores();
+    renderStart(); show('start');
+  }
+  function disarmQuit() { clearTimeout(state.quitTimer); const q = $('quitBtn'); q.classList.remove('armed'); q.textContent = 'Quit game'; }
+
+  function deadRound() {
+    stopCount();
+    state.dead++;
+    sound.dead(); vibrate(120);
+    showResult(false, 'dead');
+  }
+
+  function showResult(won, why) {
+    const [, a, u, note] = state.current;
+    state.phase = 'result';
+    if (!won) { state.pts = 0; state.bullseye = false; }
+    $('resEyebrow').textContent = won ? (state.bullseye ? 'Bullseye' : 'Correct') : (why === 'dead' ? 'Too late' : 'Nobody got it');
+    $('resHit').hidden = !(won && state.bullseye);
+    $('resTapped').hidden = !won;
+    $('resTappedNum').textContent = fmt(state.displayed);
+    $('resTappedNum').classList.toggle('bull', won && state.bullseye);
+    $('resVerdict').hidden = won || why !== 'dead';
+    $('resVerdict').textContent = `The count hit ${fmt(a * DEAD_MULT)}, double the answer, before anyone tapped. Nobody scores.`;
+    $('resAnswerNum').textContent = a.toLocaleString('en-US');
+    $('resAnswerUnit').textContent = u || '';
+    $('resNote').textContent = note || ''; $('resNote').hidden = !note;
+    const who = $('who'); who.innerHTML = '';
+    $('whoBlock').hidden = true; $('firstCard').hidden = true; $('nextBtn').hidden = true;
+    if (!won) {
+      $('nextBtn').hidden = false;
+    } else if (state.players.length === 0) {
+      const e = takeEmoji();
+      state.players.push({ e, score: state.pts });
+      $('firstEmoji').textContent = e;
+      $('firstCard').hidden = false; $('nextBtn').hidden = false;
+      renderScores();
+    } else {
+      $('whoBlock').hidden = false;
+      $('whoLabel').textContent = state.pts === 2 ? 'Who got it? Two points.' : 'Who got it?';
+      state.players.forEach((p, i) => {
+        const b = document.createElement('button'); b.className = 'pbtn'; b.type = 'button';
+        b.textContent = p.e; b.setAttribute('aria-label', 'Player ' + p.e);
+        b.addEventListener('click', () => award(i));
+        who.appendChild(b);
+      });
+      const nb = document.createElement('button'); nb.className = 'pbtn new'; nb.type = 'button'; nb.textContent = 'Someone new';
+      nb.addEventListener('click', awardNew);
+      who.appendChild(nb);
+    }
+    show('result');
+    $('nextBtn').textContent = state.round >= state.total ? 'See the scores' : 'Next round';
+    $('newNextBtn').textContent = $('nextBtn').textContent;
+  }
+
+  function takeEmoji() {
+    if (!state.pool.length) state.pool = shuffle(EMOJI);
+    return state.pool.shift();
+  }
+  function award(i) { state.players[i].score += state.pts; renderScores(); advance(); }
+  function awardNew() {
+    const e = takeEmoji();
+    state.players.push({ e, score: state.pts });
+    renderScores();
+    $('newEmoji').textContent = e;
+    state.phase = 'newplayer';
+    show('newplayer');
+  }
+  function advance() { sound.unlock(); if (state.round >= state.total) endGame(); else startRound(); }
+
+  function armGiveUp() {
+    const g = $('giveUp');
+    if (g.classList.contains('armed')) { disarmGiveUp(); stopCount(); state.unclaimed++; showResult(false); return; }
+    g.classList.add('armed'); g.textContent = 'Sure? Tap again to reveal';
+    clearTimeout(state.armTimer);
+    state.armTimer = setTimeout(disarmGiveUp, 2500);
+  }
+  function disarmGiveUp() {
+    clearTimeout(state.armTimer);
+    const g = $('giveUp'); g.classList.remove('armed'); g.textContent = "Nobody's getting this one";
+  }
+
+  function endGame() {
+    state.phase = 'end';
+    const ps = state.players.slice().sort((x, y) => y.score - x.score);
+    const top = ps.length ? ps[0].score : 0;
+    const winners = ps.filter(p => p.score === top);
+    $('endHero').textContent = ps.length ? winners.map(p => p.e).join(' ') : '🫥';
+    $('endLine').textContent = !ps.length ? 'Nobody scored. Tough deck.' : winners.length === 1 ? `Wins with ${top} point${top === 1 ? '' : 's'}.` : `Tie at ${top}.`;
+    const rank = $('rank'); rank.innerHTML = '';
+    for (const p of ps) {
+      const row = document.createElement('div'); row.className = 'row' + (p.score === top ? ' win' : '');
+      const e = document.createElement('span'); e.className = 'e'; e.textContent = p.e;
+      const wrap = document.createElement('div'); wrap.className = 'barwrap';
+      const bar = document.createElement('div'); bar.className = 'fill'; bar.style.width = (100 * p.score / Math.max(1, top)) + '%';
+      wrap.appendChild(bar);
+      const pts = document.createElement('span'); pts.className = 'pts'; pts.textContent = p.score;
+      row.append(e, wrap, pts); rank.appendChild(row);
+    }
+    const parts = [`${state.bullseyes} bullseye${state.bullseyes === 1 ? '' : 's'}`, `${state.tooEarly} too-early tap${state.tooEarly === 1 ? '' : 's'}`];
+    const dead = state.dead + state.unclaimed;
+    if (dead) parts.push(`${dead} dead round${dead === 1 ? '' : 's'}`);
+    $('endStats').textContent = parts.join(' · ');
+    show('end');
+  }
+
+  // ───────────── settings & editor ─────────────
+  function paintSettings() {
+    $('startAuto').setAttribute('aria-pressed', autoStart ? 'true' : 'false');
+    $('startTap').setAttribute('aria-pressed', autoStart ? 'false' : 'true');
+    $('rule1').textContent = autoStart ? 'A question comes up and the number starts climbing right away. Read fast.'
+                                       : 'Everyone reads the question. One person taps Start and the number starts climbing.';
+    $('unitMetric').setAttribute('aria-pressed', units === 'metric' ? 'true' : 'false');
+    $('unitImperial').setAttribute('aria-pressed', units === 'imperial' ? 'true' : 'false');
+    $('sndOn').setAttribute('aria-pressed', sound.on ? 'true' : 'false');
+    $('sndOff').setAttribute('aria-pressed', sound.on ? 'false' : 'true');
+    const sb = $('soundBtn');
+    sb.setAttribute('aria-pressed', sound.on ? 'true' : 'false');
+    sb.setAttribute('aria-label', sound.on ? 'Sound on' : 'Sound off');
+    $('sndOnIcon').hidden = !sound.on; $('sndOffIcon').hidden = sound.on;
+  }
+  function setUnits(u) { units = u; store.set('notyet.units', u); paintSettings(); renderStart(); }
+  function setAuto(v) { autoStart = !!v; store.set('notyet.autostart', autoStart); paintSettings(); }
+  function openSettings() { state.phase = 'settings'; renderStart(); paintSettings(); show('settings'); }
+  function openEditor() {
+    $('deckText').value = serializeDeck(deck);
+    $('editStatus').textContent = '';
+    state.phase = 'edit';
+    show('edit');
+  }
+  function saveDeck() {
+    const { deck: d, bad } = parseDeck($('deckText').value);
+    if (!d.length) { $('editStatus').textContent = 'Nothing usable on those lines. Each needs a question and a number.'; return; }
+    deck = d; store.set('notyet.deck', $('deckText').value);
+    $('editStatus').textContent = `Saved ${d.length} question${d.length === 1 ? '' : 's'}` + (bad ? `, skipped ${bad} part${bad === 1 ? '' : 's'} without a number` : '') + '.';
+    renderStart();
+  }
+  function resetDeck() {
+    deck = DEFAULT_DECK.map(norm); store.del('notyet.deck');
+    $('deckText').value = serializeDeck(deck);
+    $('editStatus').textContent = 'Back to the default deck.';
+    renderStart();
+  }
+
+  // ───────────── wiring ─────────────
+  function wire() {
+    const big = $('bigBtn');
+    let pointerHandled = false;
+    big.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0 && e.pointerType === 'mouse') return;
+      pointerHandled = true; big.classList.add('down');
+      onBigTap();
+    });
+    const up = () => big.classList.remove('down');
+    big.addEventListener('pointerup', up); big.addEventListener('pointercancel', up); big.addEventListener('pointerleave', up);
+    big.addEventListener('click', (e) => { if (pointerHandled) { pointerHandled = false; e.preventDefault(); return; } onBigTap(); });
+    big.addEventListener('keydown', (e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); onBigTap(); } });
+    big.addEventListener('contextmenu', (e) => e.preventDefault());
+    big.addEventListener('touchstart', () => {}, { passive: true });
+
+    const goHome = () => { state.phase = 'start'; renderStart(); show('start'); };
+    $('playBtn').addEventListener('click', newGame);
+    $('againBtn').addEventListener('click', newGame);
+    $('homeBtn').addEventListener('click', goHome);
+    $('settingsBtn').addEventListener('click', openSettings);
+    $('settingsBack').addEventListener('click', goHome);
+    $('startAuto').addEventListener('click', () => setAuto(true));
+    $('startTap').addEventListener('click', () => setAuto(false));
+    $('unitMetric').addEventListener('click', () => setUnits('metric'));
+    $('unitImperial').addEventListener('click', () => setUnits('imperial'));
+    $('sndOn').addEventListener('click', () => { sound.set(true); paintSettings(); });
+    $('sndOff').addEventListener('click', () => { sound.set(false); paintSettings(); });
+    $('soundBtn').addEventListener('click', () => { sound.set(!sound.on); paintSettings(); });
+    $('editBtn').addEventListener('click', openEditor);
+    $('saveDeckBtn').addEventListener('click', saveDeck);
+    $('resetDeckBtn').addEventListener('click', resetDeck);
+    $('backBtn').addEventListener('click', openSettings);
+    $('nextBtn').addEventListener('click', advance);
+    $('newNextBtn').addEventListener('click', advance);
+    $('giveUp').addEventListener('click', armGiveUp);
+    paintSettings();
+    window.addEventListener('resize', () => { if (state.phase === 'counting') { state.lastLen = 0; fitNum(fmt(state.displayed).length); } });
+    $('cele').addEventListener('pointerdown', () => { if (state.phase === 'cele' && performance.now() >= state.celeSkipAt) endCelebration(); });
+    $('pauseBtn').addEventListener('click', pauseGame);
+    $('resumeBtn').addEventListener('click', resumeGame);
+    $('quitBtn').addEventListener('click', quitGame);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { if (state.paused) resumeGame(); else pauseGame(); return; }
+      if (state.paused) return;
+      if (e.key !== ' ' && e.key !== 'Enter') return;
+      if (state.phase === 'cele') { e.preventDefault(); if (performance.now() >= state.celeSkipAt) endCelebration(); return; }
+      if (state.phase === 'counting' && document.activeElement !== big) { e.preventDefault(); onBigTap(); }
+    });
+  }
+
+  // ───────────── boot (survives live republishes) ─────────────
+  function snapshot() {
+    return { v: 1, phase: state.phase, round: state.round, total: state.total, questions: state.questions, players: state.players,
+             pool: state.pool, tooEarly: state.tooEarly, unclaimed: state.unclaimed, dead: state.dead, bullseyes: state.bullseyes };
+  }
+  function boot(data) {
+    wire(); renderStart();
+    const d = data || {};
+    if (d.v === 1 && Array.isArray(d.questions) && d.questions.length && d.round > 0) {
+      Object.assign(state, { total: d.total || d.questions.length, questions: d.questions, players: d.players || [], pool: d.pool && d.pool.length ? d.pool : shuffle(EMOJI),
+                             tooEarly: d.tooEarly || 0, unclaimed: d.unclaimed || 0, dead: d.dead || 0, bullseyes: d.bullseyes || 0 });
+      renderScores();
+      if (d.phase === 'end') { state.round = d.round; endGame(); }
+      else { state.round = d.round - 1; startRound(); }
+    } else {
+      show('start');
+    }
+  }
+  if (window.claude && window.claude.hot && window.claude.hot.snapshot) window.claude.hot.snapshot(snapshot);
+  if (window.claude && window.claude.hot && window.claude.hot.ready) window.claude.hot.ready(boot);
+  else boot(window.claude && window.claude.hot ? window.claude.hot.data : null);
+})();
+</script>
+</body>
+</html>
