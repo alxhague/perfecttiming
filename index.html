@@ -12,12 +12,12 @@
 <title>Perfect Timing</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;800&display=swap">
+<link rel="stylesheet" data-face="fraunces" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400..700&family=Fraunces:opsz,wght,SOFT,WONK@9..144,400..900,100,1&display=swap">
 <style>
 /* Layout: every screen is a pair, one ground colour and one type colour, and nothing else. The title is rust on
-   yellow. Each round takes the next pair; the button is the type colour as a solid disc with the count knocked
-   out of it. A win turns the round's pair inside out, a bullseye is black on orange, a miss is pink on red.
-   Sheets to read are black on mint. One chunky typeface: heavy for anything big or shouted, medium for anything read. */
+   yellow. Each round takes the next pair; the button is a chunky disc in the type colour that stands proud of the
+   table, with the count knocked out of it. A win turns the round's pair inside out, a bullseye is black on orange,
+   a miss is pink on red. Sheets to read are black on mint. The typeface is a setting while we try a few. */
 :root{
   --oxblood:#652114; --pink:#ff96d9;   /* a warm pair */
   --rust:#943821; --yellow:#fff57d;    /* home: the title, and the final scores turned inside out */
@@ -26,13 +26,18 @@
   --red:#ff0000;                       /* too early, too late */
   --white:#ffffff;                     /* pause */
   --ground:var(--yellow); --fg:var(--rust);   /* the pair in force; every screen and sheet sets its own */
-  --display:'Gabarito','Arial Rounded MT Bold','Avenir Next','Helvetica Neue',system-ui,sans-serif;
+  --side:#65261a;                             /* the edge of anything you can press: the type colour, a step darker */
+  /* the typeface in force (the script sets these from FACES): a display face for anything big, a text face for anything read */
+  --display:'Fraunces',Georgia,serif; --wd:900; --dvs:'SOFT' 100,'WONK' 1; --dvsp:'SOFT' 100,'WONK' 1,'opsz' 144;
+  --text:'DM Sans',system-ui,sans-serif; --wt:500; --wts:700;
+  --trk:.4;   /* how much of the display tracking this face wants */
+  --dz:1;     /* a size trim for wide faces */
   --ease:cubic-bezier(.3,0,.15,1);
   --spring:cubic-bezier(.2,1.5,.4,1);
 }
 html{background:var(--ground)}
 html,body{height:100%}
-body{margin:0;background:var(--ground);color:var(--fg);font-family:var(--display);font-weight:500;overflow:hidden;
+body{margin:0;background:var(--ground);color:var(--fg);font-family:var(--text);font-weight:var(--wt);overflow:hidden;
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;
   -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
 *{box-sizing:border-box}
@@ -41,32 +46,37 @@ p{margin:0}
 #stage{position:relative;width:100%;height:100%;overflow:hidden;touch-action:manipulation}
 
 /* ---------- type ---------- */
-.eyebrow{font:800 13px/1.3 var(--display);letter-spacing:.1em;text-transform:uppercase}
-.line{font:500 17px/1.45 var(--display);text-wrap:pretty}
+.eyebrow{font-size:13px;line-height:1.3;font-weight:var(--wts);letter-spacing:.1em;text-transform:uppercase}
+.line{font-size:17px;line-height:1.45;text-wrap:pretty}
 .dim{opacity:.68}
-.mark{font:800 clamp(72px,min(25vw,18vh),210px)/.86 var(--display);letter-spacing:-.035em;margin:0;text-align:center}
-.title2{font:800 clamp(30px,8.4vmin,48px)/1.04 var(--display);letter-spacing:-.03em;text-wrap:balance}
-.readout{font:800 96px/.86 var(--display);letter-spacing:-.05em;white-space:nowrap}
-.question{font:800 clamp(28px,8.4vw,46px)/1.06 var(--display);letter-spacing:-.02em;text-wrap:balance;overflow-wrap:anywhere}
+.mark{font-size:calc(var(--dz)*clamp(64px,min(26vw,18vh),210px));line-height:.88;letter-spacing:calc(-.035em*var(--trk));margin:0;text-align:center}
+.title2{font-size:calc(var(--dz)*clamp(30px,8.4vmin,48px));line-height:1.04;letter-spacing:calc(-.03em*var(--trk));text-wrap:balance}
+.readout{font-size:96px;line-height:.86;letter-spacing:calc(-.05em*var(--trk));white-space:nowrap}
+.question{font-size:calc(var(--dz)*clamp(28px,8.4vw,46px));line-height:1.06;letter-spacing:calc(-.02em*var(--trk));text-wrap:balance;overflow-wrap:anywhere}
+/* everything set in the display face */
+.mark,.title2,.readout,.question,.pill,.cbtn,.num,.rowb .total,.word,.overlay h2,.opt .t,.steps li::before{font-family:var(--display);font-weight:var(--wd);font-variation-settings:var(--dvs)}
+.mark,.readout,.num,.word,.rowb .total{font-variation-settings:var(--dvsp)}   /* the big ones, pinned to the display cut so they measure the same at any size */
 
-/* ---------- pills: the type colour as a solid, or as a tint of itself ---------- */
-.pill{font:800 18px/1 var(--display);height:52px;padding:0 28px;margin:0;border:0;border-radius:999px;flex:0 0 auto;
-  background:var(--fg);color:var(--ground);cursor:pointer;touch-action:manipulation;transition:transform .15s var(--spring);-webkit-tap-highlight-color:transparent}
-.pill:active{transform:scale(.95)}
-.pill.ghost{background:rgba(128,128,128,.3);background:color-mix(in srgb,var(--fg) 20%,transparent);color:var(--fg)}
+/* ---------- pills: the type colour as a solid key with an edge, or as a flat tint of itself ---------- */
+.pill{font-size:18px;line-height:1;height:52px;padding:0 28px;margin:0 0 5px;border:0;border-radius:999px;flex:0 0 auto;
+  background:var(--fg);color:var(--ground);cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+  box-shadow:0 5px 0 var(--side);transition:transform .07s ease,box-shadow .07s ease}
+.pill:active{transform:translateY(4px);box-shadow:0 1px 0 var(--side)}
+.pill.ghost{background:rgba(128,128,128,.3);background:color-mix(in srgb,var(--fg) 20%,transparent);color:var(--fg);box-shadow:none;margin-bottom:0;transition:transform .15s var(--spring)}
+.pill.ghost:active{transform:scale(.95);box-shadow:none}
 .pill.small{height:42px;padding:0 20px;font-size:15px}
-.pill.armed{background:var(--red);color:var(--pink)}
+.pill.armed{background:var(--red);color:var(--pink);--side:#a80000}
 .pill:focus-visible,.cbtn:focus-visible,.big:focus-visible,.opt:focus-visible,.pbtn:focus-visible{outline:2px solid var(--fg);outline-offset:3px}
 .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 
 /* ---------- corner furniture: tints of whichever type colour is in force ---------- */
 #corner{position:absolute;left:max(20px,env(safe-area-inset-left,0px));top:22px;z-index:5;height:32px;padding:0 14px 0 15px;border-radius:999px;
   display:flex;align-items:center;background:rgba(128,128,128,.3);background:color-mix(in srgb,var(--fg) 18%,transparent);color:var(--fg);
-  font:800 12px/1 var(--display);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;pointer-events:none}
+  font-size:12px;line-height:1;font-weight:var(--wts);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;pointer-events:none}
 #corner:empty{display:none}
 #ctrl{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:16px;z-index:5;display:flex;gap:8px}
 .cbtn{width:44px;height:44px;padding:0;margin:0;border:0;border-radius:50%;display:grid;place-items:center;cursor:pointer;touch-action:manipulation;
-  background:rgba(128,128,128,.3);background:color-mix(in srgb,var(--fg) 18%,transparent);color:var(--fg);font:800 20px/1 var(--display);
+  background:rgba(128,128,128,.3);background:color-mix(in srgb,var(--fg) 18%,transparent);color:var(--fg);font-size:20px;line-height:1;
   transition:transform .15s var(--spring);-webkit-tap-highlight-color:transparent}
 .cbtn:active{transform:scale(.92)}
 
@@ -81,25 +91,26 @@ p{margin:0}
 @keyframes unwipe{from{clip-path:circle(142% at var(--ox,50%) var(--oy,50%))}to{clip-path:circle(0% at var(--ox,50%) var(--oy,50%))}}
 
 .scores{display:flex;flex-wrap:wrap;gap:6px}
-.chip{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px 0 8px;border-radius:999px;font:500 15px/1 var(--display);
+.chip{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px 0 8px;border-radius:999px;font-size:15px;line-height:1;font-weight:var(--wts);
   background:rgba(128,128,128,.3);background:color-mix(in srgb,var(--fg) 18%,transparent)}
 .chip .e{font-size:17px;line-height:1}
 
-/* ---------- the round ---------- */
+/* ---------- the round: one big button with an edge and a shadow, that goes down when you hit it ---------- */
 .arena{flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;position:relative;container-type:size;padding-block:10px 6px}
-.big{--d:min(82vw,44vh,400px);
-  --d:max(180px,min(82vw,calc(100cqh - 16px),400px));   /* fill whatever height the question leaves */
-  width:var(--d);height:var(--d);border-radius:50%;border:0;padding:0;margin:0;background:var(--fg);color:var(--ground);display:grid;place-items:center;
-  cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:transform .15s var(--spring),background .12s,color .12s}
-.big.down{transform:scale(.955)}
-.big.early{background:var(--red);color:var(--pink);animation:shake .45s linear}
-.num{display:flex;align-items:baseline;justify-content:center;white-space:nowrap;font:800 40px/1 var(--display)}
-.num b{font-weight:800;display:inline-block;text-align:center}
+.big{--d:min(80vw,42vh,400px);
+  --d:max(180px,min(80vw,calc(100cqh - 50px),400px));   /* fill whatever height the question leaves, with room for the edge */
+  width:var(--d);height:var(--d);border-radius:50%;border:0;padding:0;margin:0 0 16px;background:var(--fg);color:var(--ground);display:grid;place-items:center;
+  cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+  box-shadow:0 16px 0 var(--side),0 34px 30px -12px rgba(0,0,0,.34);
+  transition:transform .07s ease,box-shadow .07s ease,background .12s,color .12s}
+.big.down{transform:translateY(13px);box-shadow:0 3px 0 var(--side),0 10px 12px -8px rgba(0,0,0,.34)}
+.big.early{background:var(--red);color:var(--pink);--side:#a80000;animation:shake .45s linear}
+.num{display:flex;align-items:baseline;justify-content:center;white-space:nowrap;font-size:40px;line-height:1}
+.num b{font-weight:inherit;display:inline-block;text-align:center}
 .num b.d{width:var(--dw,.6em)}
 .num b.c{width:var(--cw,.26em)}
-.num.is-label{letter-spacing:-.02em}
 .capsule{position:absolute;top:0;left:50%;z-index:2;height:50px;padding:0 24px;border-radius:999px;display:grid;place-items:center;white-space:nowrap;
-  background:var(--red);color:var(--pink);font:800 15px/1 var(--display);letter-spacing:.1em;text-transform:uppercase;pointer-events:none;
+  background:var(--red);color:var(--pink);font-size:15px;line-height:1;font-weight:var(--wts);letter-spacing:.1em;text-transform:uppercase;pointer-events:none;
   transform:translate(-50%,-70%) scale(.7);opacity:0;transition:transform .3s var(--spring),opacity .12s}
 .capsule.show{transform:translate(-50%,0) scale(1);opacity:1}
 #giveUp{align-self:center}
@@ -109,10 +120,10 @@ p{margin:0}
 .block{display:flex;flex-direction:column;gap:12px}
 .answer{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-top:2px}
 .tapline{font-size:22px;line-height:1.2}
-.who{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-.pbtn{width:76px;height:76px;padding:0;margin:0;border:0;border-radius:50%;display:grid;place-items:center;font-size:40px;line-height:1;cursor:pointer;touch-action:manipulation;
-  background:rgba(128,128,128,.3);background:color-mix(in srgb,var(--fg) 18%,transparent);transition:transform .15s var(--spring);-webkit-tap-highlight-color:transparent}
-.pbtn:active{transform:scale(.92)}
+.who{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.pbtn{width:76px;height:76px;padding:0;margin:0 0 5px;border:0;border-radius:50%;display:grid;place-items:center;font-size:40px;line-height:1;cursor:pointer;touch-action:manipulation;
+  background:var(--fg);box-shadow:0 5px 0 var(--side);transition:transform .07s ease,box-shadow .07s ease;-webkit-tap-highlight-color:transparent}
+.pbtn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--side)}
 .notecard{display:flex;align-items:center;gap:16px;padding:16px 22px 16px 18px;border-radius:30px;background:rgba(128,128,128,.3);background:color-mix(in srgb,var(--fg) 16%,transparent)}
 .notecard .e{font-size:54px;line-height:1}
 .screen>.col>.pill{align-self:flex-start}
@@ -126,7 +137,7 @@ p{margin:0}
   border-top:1px solid rgba(128,128,128,.4);border-top:1px solid color-mix(in srgb,currentColor 24%,transparent)}
 .rowb:last-child{border-bottom:1px solid rgba(128,128,128,.4);border-bottom:1px solid color-mix(in srgb,currentColor 24%,transparent)}
 .rowb .e{font-size:34px;line-height:1}
-.rowb .total{font:800 clamp(34px,10vmin,64px)/.95 var(--display);letter-spacing:-.06em;text-align:right;min-width:1.2em}
+.rowb .total{font-size:clamp(34px,10vmin,64px);line-height:.95;letter-spacing:calc(-.06em*var(--trk));text-align:right;min-width:1.2em}
 
 /* ---------- takeovers: a disc of colour that grows from the button to fill the table ---------- */
 .takeover{position:absolute;inset:0;z-index:30;display:grid;place-items:center;overflow:hidden;background:var(--ground);color:var(--fg);cursor:pointer;
@@ -135,40 +146,40 @@ p{margin:0}
 .takeover.out{animation:unwipe .42s var(--ease) both;pointer-events:none}
 .takeover canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .tk{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px;width:min(600px,100%)}
-.word{font:800 clamp(64px,19vmin,190px)/.92 var(--display);letter-spacing:-.045em;text-wrap:balance;animation:enter .5s .12s var(--spring) both}
+.word{font-size:72px;line-height:.92;letter-spacing:calc(-.045em*var(--trk));text-wrap:balance;animation:enter .5s .12s var(--spring) both}
 .tk .answer{justify-content:center;animation:enter .5s .22s var(--spring) both}
 .tag{height:46px;padding:0 22px;border-radius:999px;background:var(--fg);color:var(--ground);display:grid;place-items:center;
-  font:800 14px/1 var(--display);letter-spacing:.1em;text-transform:uppercase;animation:enter .5s .3s var(--spring) both,nudge 1.1s .85s ease-in-out infinite}
+  font-size:14px;line-height:1;font-weight:var(--wts);letter-spacing:.1em;text-transform:uppercase;animation:enter .5s .3s var(--spring) both,nudge 1.1s .85s ease-in-out infinite}
 .ring{display:none}
-#cele.bull .word{font-size:clamp(76px,23vmin,230px);animation:slam .6s .1s var(--spring) both}
+#cele.bull .word{animation:slam .6s .1s var(--spring) both}
 #cele.bull .tk{animation:shake .5s .34s linear}
 #cele.bull .ring{display:block;position:absolute;left:50%;top:50%;width:44vmin;height:44vmin;margin:-22vmin 0 0 -22vmin;border-radius:50%;
   box-shadow:inset 0 0 0 3px var(--fg);pointer-events:none;animation:ringout 1.15s var(--ease) both}
 #cele.bull .ring.r2{animation-delay:.2s}
 #cele.bull .ring.r3{animation-delay:.4s}
-#late .word{font-size:clamp(84px,25vmin,240px);animation:slam .5s var(--spring) both}
+#late .word{animation:slam .5s var(--spring) both}
 @keyframes enter{from{transform:scale(.55);opacity:0}}
 @keyframes slam{from{transform:scale(3.2);opacity:0}}
 @keyframes nudge{0%,100%{transform:rotate(-2.2deg)}50%{transform:rotate(2.2deg)}}
 @keyframes ringout{from{transform:scale(.2);opacity:.9}to{transform:scale(3.6);opacity:0}}
 
 /* ---------- sheets to read: rules, settings and the deck in black on mint; pause in oxblood on white ---------- */
-.overlay{--ground:var(--mint);--fg:var(--black);position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;
+.overlay{--ground:var(--mint);--fg:var(--black);--side:#3c3c3c;position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;
   background:var(--ground);color:var(--fg);overflow-y:auto;-webkit-overflow-scrolling:touch;
   padding-block:min(84px,14vh) 40px;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px));
   animation:wipe .45s var(--ease) both}
-#pause{--ground:var(--white);--fg:var(--oxblood);z-index:24}
+#pause{--ground:var(--white);--fg:var(--oxblood);--side:#3d130b;z-index:24}
 #deck{z-index:22}
 .overlay>.col{margin:0 auto;width:min(480px,100%);display:flex;flex-direction:column;gap:28px;text-align:left;flex:0 0 auto}
 .overlay>.col.center{margin:auto;align-items:center;text-align:center}
 .overlay .x{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:16px}
-.overlay h2{margin:0;font:800 clamp(44px,12vmin,76px)/1 var(--display);letter-spacing:-.04em;text-align:center;text-wrap:balance}
+.overlay h2{margin:0;font-size:calc(var(--dz)*clamp(44px,12vmin,76px));line-height:1;letter-spacing:calc(-.04em*var(--trk));text-align:center;text-wrap:balance}
 .overlay>.col>.pill{align-self:center}
-.stack{display:flex;flex-direction:column;gap:10px;width:min(280px,100%)}
+.stack{display:flex;flex-direction:column;gap:12px;width:min(280px,100%)}
 .stack .pill{width:100%}
 .group{display:flex;flex-direction:column;gap:10px}
 .group>.pill{align-self:flex-start}
-.hint{font:500 15px/1.5 var(--display);opacity:.68;text-wrap:pretty}
+.hint{font-size:15px;line-height:1.5;opacity:.68;text-wrap:pretty}
 .hint code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
 
 .opts{display:flex;flex-direction:column}
@@ -177,17 +188,17 @@ p{margin:0}
   border-top:1px solid rgba(128,128,128,.4);border-top:1px solid color-mix(in srgb,currentColor 24%,transparent)}
 .opt:last-child{border-bottom:1px solid rgba(128,128,128,.4);border-bottom:1px solid color-mix(in srgb,currentColor 24%,transparent)}
 .opt:active{opacity:.55}
-.opt .t{grid-column:1;font:800 22px/1.2 var(--display);letter-spacing:-.01em}
-.opt .d{grid-column:1;font:500 15px/1.45 var(--display);opacity:.68;margin-top:4px}
+.opt .t{grid-column:1;font-size:22px;line-height:1.2;letter-spacing:calc(-.01em*var(--trk))}
+.opt .d{grid-column:1;font-size:15px;line-height:1.45;opacity:.68;margin-top:4px}
 .opt::after{content:"";grid-column:2;grid-row:1/span 2;width:24px;height:24px;border-radius:50%;box-shadow:inset 0 0 0 1.5px currentColor;opacity:.4}
 .opt.on::after{opacity:1;background:var(--ground);box-shadow:inset 0 0 0 7.5px var(--fg)}
 
 .steps{margin:0;padding:0;list-style:none;counter-reset:s;display:flex;flex-direction:column}
-.steps li{counter-increment:s;display:grid;grid-template-columns:36px 1fr;align-items:baseline;padding:13px 0;font:500 17px/1.45 var(--display);
+.steps li{counter-increment:s;display:grid;grid-template-columns:36px 1fr;align-items:baseline;padding:13px 0;font-size:17px;line-height:1.45;
   border-top:1px solid rgba(128,128,128,.4);border-top:1px solid color-mix(in srgb,currentColor 24%,transparent)}
 .steps li:last-child{border-bottom:1px solid rgba(128,128,128,.4);border-bottom:1px solid color-mix(in srgb,currentColor 24%,transparent)}
-.steps li::before{content:counter(s);font:800 22px/1 var(--display);grid-row:1/span 2}
-.steps b{grid-column:2;font-weight:800}
+.steps li::before{content:counter(s);font-size:22px;line-height:1;grid-row:1/span 2}
+.steps b{grid-column:2;font-weight:var(--wts)}
 .steps span{grid-column:2;opacity:.68}
 
 textarea{width:100%;min-height:44vh;resize:vertical;border:0;border-radius:18px;padding:14px 16px;-webkit-user-select:text;user-select:text;
@@ -314,6 +325,10 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
     <button class="cbtn x" type="button" data-close="settings" aria-label="Close"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none"/></svg></button>
     <div class="col">
       <h2>Settings</h2>
+      <div class="group">
+        <div class="eyebrow">Typeface · trying a few</div>
+        <div class="opts" id="faceOpts"></div>
+      </div>
       <div class="group">
         <div class="eyebrow">Count starts</div>
         <div class="opts">
@@ -851,7 +866,7 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
     const next = $('screen-' + name), prev = $('screen-' + cur);
     document.querySelectorAll('.screen').forEach(s => { if (s !== next && s !== prev) { s.hidden = true; s.classList.remove('wipe'); s.style.zIndex = ''; } });
     clearTimeout(wipeTimer);
-    next.style.setProperty('--ground', pair[0]); next.style.setProperty('--fg', pair[1]);
+    next.style.setProperty('--ground', pair[0]); next.style.setProperty('--fg', pair[1]); next.style.setProperty('--side', sideOf(pair[1]));
     next.classList.remove('wipe'); prev.classList.remove('wipe');
     next.hidden = false; next.scrollTop = 0;
     if (prev !== next) {
@@ -892,20 +907,65 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
     return { total: deck.length, small, medium: deck.length - small - big, big, both: deck.filter(e => e.i !== e.m).length };
   }
 
+  // ───────────── typefaces: a setting while we try a few ─────────────
+  const SANS = "'DM Sans',system-ui,-apple-system,'Helvetica Neue',sans-serif";
+  const FACES = {
+    fraunces:  { name: 'Fraunces', note: 'A soft, wonky serif. Seventies game show.', display: "'Fraunces',Georgia,serif", wd: 900,
+                 dvs: "'SOFT' 100,'WONK' 1", dvsp: "'SOFT' 100,'WONK' 1,'opsz' 144", text: SANS, wt: 500, wts: 700, trk: 0.4, dz: 1, probe: "900 40px 'Fraunces'",
+                 url: 'https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400..700&family=Fraunces:opsz,wght,SOFT,WONK@9..144,400..900,100,1&display=swap' },
+    fredoka:   { name: 'Fredoka', note: 'Round and soft, the face Tap App uses.', display: "'Fredoka','Arial Rounded MT Bold',system-ui,sans-serif", wd: 600,
+                 dvs: 'normal', dvsp: 'normal', text: "'Fredoka','Arial Rounded MT Bold',system-ui,sans-serif", wt: 500, wts: 600, trk: 0.5, dz: 1, probe: "600 40px 'Fredoka'",
+                 url: 'https://fonts.googleapis.com/css2?family=Fredoka:wght@400..700&display=swap' },
+    bricolage: { name: 'Bricolage Grotesque', note: 'A heavy grotesque with a few quirks.', display: "'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif", wd: 800,
+                 dvs: 'normal', dvsp: "'opsz' 96", text: "'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif", wt: 500, wts: 700, trk: 0.55, dz: 1, probe: "800 40px 'Bricolage Grotesque'",
+                 url: 'https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap' },
+    bowlby:    { name: 'Bowlby One', note: 'Fat poster type. Loud.', display: "'Bowlby One',Impact,'Arial Black',sans-serif", wd: 400,
+                 dvs: 'normal', dvsp: 'normal', text: SANS, wt: 500, wts: 700, trk: 0, dz: 0.8, probe: "400 40px 'Bowlby One'",
+                 url: 'https://fonts.googleapis.com/css2?family=Bowlby+One&family=DM+Sans:opsz,wght@9..40,400..700&display=swap' }
+  };
+  const DEFAULT_FACE = 'fraunces';
+  let face = DEFAULT_FACE;
+  function loadFace(id) {
+    if (document.querySelector('link[data-face="' + id + '"]')) return;
+    const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = FACES[id].url; l.dataset.face = id;
+    document.head.appendChild(l);
+  }
+  function applyFace(id, save) {
+    if (!FACES[id]) id = DEFAULT_FACE;
+    face = id; const f = FACES[id];
+    loadFace(id);
+    const s = root.style;
+    s.setProperty('--display', f.display); s.setProperty('--wd', f.wd); s.setProperty('--dvs', f.dvs); s.setProperty('--dvsp', f.dvsp);
+    s.setProperty('--text', f.text); s.setProperty('--wt', f.wt); s.setProperty('--wts', f.wts); s.setProperty('--trk', f.trk); s.setProperty('--dz', f.dz);
+    if (save) store.set('notyet.face', id);
+    refit();
+    try { if (document.fonts && document.fonts.load) document.fonts.load(f.probe).then(refit).catch(() => {}); } catch (e) { /* fine */ }
+  }
+
   // ───────────── type fitting ─────────────
-  // Digits are set in fixed-width cells so a racing count doesn't shimmer; the cell widths are measured from the real font.
-  const M = { dw: 0.6, cw: 0.26 };
-  let mctx = null;
-  function fontOf(el) { return `800 200px ${getComputedStyle(el).fontFamily}`; }
-  function measure() {
+  // Everything big is measured in the real face (a hidden probe set the same way as the element), so any typeface fits.
+  let probe = null;
+  function emWidth(ref, s) {
     try {
-      mctx = mctx || document.createElement('canvas').getContext('2d');
-      mctx.font = fontOf($('num'));
-      let w = 0; for (const d of '0123456789') w = Math.max(w, mctx.measureText(d).width);
-      const cw = mctx.measureText(',').width;
-      if (w > 60 && w < 200) { M.dw = w / 200 * 0.96; M.cw = Math.max(0.16, cw / 200); }
-    } catch (e) { /* keep the defaults */ }
-    const n = $('num'); n.style.setProperty('--dw', M.dw + 'em'); n.style.setProperty('--cw', M.cw + 'em');
+      if (!probe) {
+        probe = document.createElement('span');
+        probe.style.cssText = 'position:absolute;left:-9999px;top:0;visibility:hidden;white-space:pre;font-size:200px;line-height:1;letter-spacing:0;pointer-events:none';
+        document.body.appendChild(probe);
+      }
+      const cs = getComputedStyle(ref);
+      probe.style.fontFamily = cs.fontFamily; probe.style.fontWeight = cs.fontWeight; probe.style.fontVariationSettings = cs.fontVariationSettings;
+      probe.textContent = s;
+      const w = probe.getBoundingClientRect().width / 200;
+      return w > 0 ? w : s.length * 0.6;
+    } catch (e) { return s.length * 0.6; }
+  }
+  // Digits are set in fixed-width cells so a racing count doesn't shimmer.
+  const M = { dw: 0.6, cw: 0.26 };
+  function measure() {
+    const n = $('num');
+    let w = 0; for (const d of '0123456789') w = Math.max(w, emWidth(n, d));
+    if (w > 0.3 && w < 1.1) { M.dw = w * 0.97; M.cw = Math.max(0.16, emWidth(n, ',')); }
+    n.style.setProperty('--dw', M.dw + 'em'); n.style.setProperty('--cw', M.cw + 'em');
   }
   const cellsEm = (s) => { let w = 0; for (const ch of s) w += (ch === ',' ? M.cw : M.dw); return w; };
 
@@ -925,13 +985,37 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
     $('num').innerHTML = h;
     fitNum(s);
   }
-  // A one-line readout sized to the width it has.
+  // A one-line readout sized to the width it has (the readout is tracked in by .05em a character, scaled by the face).
   function fitReadout(el, s, maxPx, avail) {
     el.textContent = s;
-    let em = s.length * 0.55;
-    try { mctx = mctx || document.createElement('canvas').getContext('2d'); mctx.font = fontOf(el); em = mctx.measureText(s).width / 200; } catch (e) { /* estimate */ }
-    em = Math.max(0.4, em - 0.05 * s.length);                      // the readout is tracked in by .05em a character
+    const em = Math.max(0.4, emWidth(el, s) - 0.05 * FACES[face].trk * s.length);
     el.style.fontSize = Math.max(34, Math.floor(Math.min(maxPx, avail / em))) + 'px';
+  }
+  // A headline that may wrap between words, sized so its longest word fits.
+  function fitWord(el, text, maxPx, avail, track) {
+    let em = 0.5;
+    for (const w of text.split(/\s+/)) em = Math.max(em, emWidth(el, w) + track * FACES[face].trk * w.length);
+    el.style.fontSize = Math.floor(Math.min(maxPx * FACES[face].dz, avail / em)) + 'px';
+  }
+  const vmin = () => Math.min(innerWidth, innerHeight);
+  function fitMark() {
+    const el = document.querySelector('.mark');
+    fitWord(el, 'Perfect Timing', Math.max(64, Math.min(innerWidth * 0.3, innerHeight * 0.2, 220)), Math.min(innerWidth - 44, 560), -0.035);
+  }
+  function refit() {
+    measure(); fitMark();
+    if (state.phase === 'counting') { state.lastLen = 0; fitNum(fmt(state.displayed)); }
+    if (state.phase === 'result' && state.current) {
+      const col = $('screen-result').querySelector('.col');
+      fitReadout($('resAnswerNum'), state.current[1].toLocaleString('en-US'), Math.min(150, innerWidth * 0.32), col.clientWidth || 320);
+    }
+  }
+  // The edge of a pressable thing: the type colour a step darker (or, for black, a step lighter).
+  function sideOf(hex) {
+    const n = parseInt(hex.slice(1), 16), r = n >> 16 & 255, g = n >> 8 & 255, b = n & 255;
+    if (r + g + b < 60) return '#3c3c3c';
+    const k = 0.66, h = (v) => Math.round(v * k).toString(16).padStart(2, '0');
+    return '#' + h(r) + h(g) + h(b);
   }
 
   // ───────────── game flow ─────────────
@@ -1031,6 +1115,7 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
     sound.dead(); vibrate(120);
     state.phase = 'late';
     const el = $('late'); el.classList.remove('out'); discOrigin(el); el.hidden = false;
+    fitWord(el.querySelector('.word'), 'Too late', Math.max(84, Math.min(vmin() * 0.27, 240)), Math.min(innerWidth - 40, 600), -0.045);
     clearTimeout(state.celeTimer);
     state.celeTimer = setTimeout(() => { showResult(false, 'dead', true); fadeOut(el); }, reduceMotion ? 800 : LATE_SHOW_MS);
   }
@@ -1104,7 +1189,8 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
     el.style.setProperty('--ground', pair[0]); el.style.setProperty('--fg', pair[1]);
     el.classList.remove('out'); el.classList.toggle('bull', bull);
     $('celeEyebrow').textContent = `Round ${state.round} of ${state.total}`;
-    $('celeTitle').textContent = bull ? 'Bullseye!' : WIN_LINES[Math.floor(Math.random() * WIN_LINES.length)];
+    const headline = bull ? 'Bullseye!' : WIN_LINES[Math.floor(Math.random() * WIN_LINES.length)];
+    $('celeTitle').textContent = headline;
     const shown = bull ? state.current[1].toLocaleString('en-US') : fmt(state.displayed);   // a bullseye shows the real answer, a plain win the number you hit
     $('celeUnit').textContent = state.current[2] || '';
     $('celeChip').hidden = !bull;
@@ -1113,6 +1199,7 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
     const [x, y] = discOrigin(el);
     state.phase = 'cele';
     el.hidden = false;
+    fitWord($('celeTitle'), headline, bull ? Math.max(76, Math.min(vmin() * 0.25, 230)) : Math.max(64, Math.min(vmin() * 0.2, 190)), Math.min(innerWidth - 40, 600), -0.045);
     fitReadout($('celeNum'), shown, Math.min(120, innerWidth * 0.24), Math.min(innerWidth - 48, 560));
     dots.start(bull ? 2 : 1, pair, x, y);
     state.celeSkipAt = performance.now() + 650;                     // a tap after this skips ahead (slams right after the win don't)
@@ -1234,6 +1321,7 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
     $('rule1b').textContent = autoStart ? 'Read fast.' : 'Read, then start.';
     $('rule1').textContent = autoStart ? 'A question comes up and the number starts climbing right away.'
                                        : 'Everyone reads the question. One tap on Start and the number starts climbing.';
+    document.querySelectorAll('#faceOpts .opt').forEach(b => { const v = b.dataset.face === face; b.classList.toggle('on', v); b.setAttribute('aria-pressed', v ? 'true' : 'false'); });
     const n = deckCounts();
     $('settingsDeckInfo').textContent = `${n.total} questions: ${n.small} small answers, ${n.medium} medium, ${n.big} big. Each game draws ten. ${n.both} of them switch with the units setting.`;
   }
@@ -1310,7 +1398,15 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
     $('againBtn').addEventListener('click', newGame);
     $('homeBtn').addEventListener('click', goHome);
     $('helpBtn').addEventListener('click', () => { paintSettings(); openSheet('rules'); });
-    $('settingsBtn').addEventListener('click', () => { paintSettings(); openSheet('settings'); });
+    for (const id of Object.keys(FACES)) {                               // one row per typeface, each set in its own face
+      const f = FACES[id], b = document.createElement('button'); b.className = 'opt'; b.type = 'button'; b.dataset.face = id;
+      const tt = document.createElement('span'); tt.className = 't'; tt.textContent = f.name;
+      tt.style.fontFamily = f.display; tt.style.fontWeight = f.wd; tt.style.fontVariationSettings = f.dvs;
+      const dd = document.createElement('span'); dd.className = 'd'; dd.textContent = f.note;
+      b.append(tt, dd); b.addEventListener('click', () => { applyFace(id, true); paintSettings(); });
+      $('faceOpts').appendChild(b);
+    }
+    $('settingsBtn').addEventListener('click', () => { Object.keys(FACES).forEach(loadFace); paintSettings(); openSheet('settings'); });
     document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => closeSheet(b.dataset.close)));
     $('startAuto').addEventListener('click', () => setAuto(true));
     $('startTap').addEventListener('click', () => setAuto(false));
@@ -1335,8 +1431,8 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
       if (state.phase === 'cele') { e.preventDefault(); if (performance.now() >= state.celeSkipAt) endCelebration(); return; }
       if (state.phase === 'counting' && document.activeElement !== big) { e.preventDefault(); onBigTap(); }
     });
-    window.addEventListener('resize', () => { if (state.phase === 'counting') { state.lastLen = 0; fitNum(fmt(state.displayed)); } });
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { measure(); if (state.phase === 'counting') { state.lastLen = 0; fitNum(fmt(state.displayed)); } }).catch(() => {});
+    window.addEventListener('resize', refit);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(refit).catch(() => {});
   }
 
   // ───────────── boot (survives live republishes) ─────────────
@@ -1345,7 +1441,7 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
              pool: state.pool, tooEarly: state.tooEarly, unclaimed: state.unclaimed, dead: state.dead, bullseyes: state.bullseyes };
   }
   function boot(data) {
-    wire(); paintSettings(); measure();
+    wire(); applyFace(store.get('notyet.face', DEFAULT_FACE), false); paintSettings();
     const d = data || {};
     if (d.v === 1 && Array.isArray(d.questions) && d.questions.length && d.round > 0) {
       Object.assign(state, { total: d.total || d.questions.length, questions: d.questions, players: d.players || [], pool: d.pool && d.pool.length ? d.pool : shuffle(EMOJI),
