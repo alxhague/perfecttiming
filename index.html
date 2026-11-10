@@ -5,443 +5,367 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Perfect Timing">
+<meta name="theme-color" content="#fff57d">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
 <title>Perfect Timing</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Martian+Mono:wdth,wght@75..112.5,100..800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:wght@400&display=swap">
 <style>
-  /* base reset (the artifact host normally supplies this) */
-  :root { color-scheme: light; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); box-sizing: border-box; }
-  html { height: 100%; }
-  body { margin: 0; font: 14px/1.4 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
-  img { max-width: 100%; }
-  [hidden] { display: none !important; }
-</style>
-<style>
-  /* Layout: one-screen app that behaves like a box of cards. Clean paper, black type, lots of air. The question
-     sits on a playing card with a colored band; the round's one color also fills the big button. Each round
-     takes the next color from a small set, the way each game on the shelf gets its own. */
-  :root {
-    --paper: #FFFFFF;
-    --ink: #121212;
-    --mute: #6E6E76;
-    --line: #DDDDE2;
-    --soft: #F2F2F5;
-    --panel: #FFFFFF;
-    --scrim: rgba(255, 255, 255, .84);
-    /* the round colors: the same in both themes */
-    --c: #3D6BFF;
-    --m: #EC1C8C;
-    --y: #FFC629;
-    --t: #19B5B0;
-    --o: #FF6B2C;
-    --k: #121212;
-    --w: #FFFFFF;
-    --field: var(--m);
-    --on: #FFFFFF;
-    --display: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
-    --mono: 'Martian Mono', ui-monospace, Menlo, Consolas, monospace;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --paper: #121214; --ink: #F6F6F8; --mute: #9C9CA6; --line: #2E2E35; --soft: #1C1C21; --panel: #19191E; --scrim: rgba(18, 18, 20, .84);
-      color-scheme: dark;
-    }
-  }
-  :root[data-theme="dark"] {
-    --paper: #121214; --ink: #F6F6F8; --mute: #9C9CA6; --line: #2E2E35; --soft: #1C1C21; --panel: #19191E; --scrim: rgba(18, 18, 20, .84);
-    color-scheme: dark;
-  }
-  body[data-ink="c"] { --field: var(--c); --on: #FFFFFF; }
-  body[data-ink="m"] { --field: var(--m); --on: #FFFFFF; }
-  body[data-ink="y"] { --field: var(--y); --on: #121212; }
-  body[data-ink="t"] { --field: var(--t); --on: #121212; }
-  body[data-ink="o"] { --field: var(--o); --on: #121212; }
+/* Layout: every screen is a pair, one ground colour and one type colour, and nothing else. The title is rust on
+   yellow. Each round takes the next pair; the button is the type colour as a solid disc with the count knocked
+   out of it. A win turns the round's pair inside out, a bullseye is black on orange, a miss is pink on red.
+   Sheets to read are black on mint. One typeface in one weight; scale does the rest. */
+:root{
+  --oxblood:#652114; --pink:#ff96d9;   /* a warm pair */
+  --rust:#943821; --yellow:#fff57d;    /* home: the title, and the final scores turned inside out */
+  --peri:#7f9ad1; --mint:#9dffb2;      /* a cool pair, and the sheets you read */
+  --orange:#ff8800; --black:#000000;   /* the bullseye */
+  --red:#ff0000;                       /* too early, too late */
+  --white:#ffffff;                     /* pause */
+  --ground:var(--yellow); --fg:var(--rust);   /* the pair in force; every screen and sheet sets its own */
+  --display:'Jost','Futura','Century Gothic','Avenir Next',system-ui,sans-serif;
+  --ease:cubic-bezier(.3,0,.15,1);
+  --spring:cubic-bezier(.2,1.5,.4,1);
+}
+html{background:var(--ground)}
+html,body{height:100%}
+body{margin:0;background:var(--ground);color:var(--fg);font-family:var(--display);font-weight:400;overflow:hidden;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;
+  -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit}
+p{margin:0}
+#stage{position:relative;width:100%;height:100%;overflow:hidden;touch-action:manipulation}
 
-  html, body { height: 100%; }
-  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--display); -webkit-text-size-adjust: 100%; }
-  * { box-sizing: border-box; }
-  button { font: inherit; color: inherit; }
+/* ---------- type ---------- */
+.eyebrow{font:400 13px/1.3 var(--display);letter-spacing:.1em;text-transform:uppercase}
+.line{font:400 17px/1.45 var(--display);text-wrap:pretty}
+.dim{opacity:.68}
+.mark{font:400 clamp(76px,min(27vw,19vh),220px)/.88 var(--display);letter-spacing:-.045em;margin:0;text-align:center}
+.title2{font:400 clamp(30px,8.4vmin,48px)/1.04 var(--display);letter-spacing:-.03em;text-wrap:balance}
+.readout{font:400 96px/.86 var(--display);letter-spacing:-.05em;white-space:nowrap}
+.question{font:400 clamp(30px,9vw,50px)/1.06 var(--display);letter-spacing:-.028em;text-wrap:balance;overflow-wrap:anywhere}
 
-  #app {
-    height: 100%; max-width: 600px; margin: 0 auto;
-    display: flex; flex-direction: column;
-    padding-left: max(16px, env(safe-area-inset-left, 0px));
-    padding-right: max(16px, env(safe-area-inset-right, 0px));
-    padding-block: 12px 14px;
-  }
+/* ---------- pills: the type colour as a solid, or as a tint of itself ---------- */
+.pill{font:400 18px/1 var(--display);height:52px;padding:0 28px;margin:0;border:0;border-radius:999px;flex:0 0 auto;
+  background:var(--fg);color:var(--ground);cursor:pointer;touch-action:manipulation;transition:transform .15s var(--spring);-webkit-tap-highlight-color:transparent}
+.pill:active{transform:scale(.95)}
+.pill.ghost{background:rgba(128,128,128,.3);background:color-mix(in srgb,var(--fg) 20%,transparent);color:var(--fg)}
+.pill.small{height:42px;padding:0 20px;font-size:15px}
+.pill.armed{background:var(--red);color:var(--pink)}
+.pill:focus-visible,.cbtn:focus-visible,.big:focus-visible,.opt:focus-visible,.pbtn:focus-visible{outline:2px solid var(--fg);outline-offset:3px}
+.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 
-  /* status strip */
-  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex: 0 0 auto;
-            font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--mute); font-weight: 600; }
-  .brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; color: var(--ink); }
-  .mark { width: 13px; height: 13px; border-radius: 50%; background: var(--m); box-shadow: 0 2px 0 color-mix(in srgb, var(--m) 60%, black); flex: 0 0 auto; }
-  .iconbtn { background: none; border: 1.5px solid var(--line); border-radius: 999px; padding: 6px 10px; cursor: pointer;
-             font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--mute); touch-action: manipulation; }
-  .iconbtn[aria-pressed="true"] { color: var(--ink); }
-  .iconbtn.icon { width: 36px; height: 30px; padding: 0; display: inline-flex; align-items: center; justify-content: center; color: var(--ink); -webkit-tap-highlight-color: transparent; }
-  .iconbtn.icon[aria-pressed="false"] { color: var(--mute); }
-  .topbar-right { display: inline-flex; gap: 6px; flex: 0 0 auto; }
-  .scores { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; flex: 0 0 auto; }
-  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px 4px 6px; border-radius: 999px;
-          background: var(--panel); border: 1.5px solid var(--line); color: var(--ink); font-family: var(--mono); font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; }
-  .chip .e { font-size: 18px; line-height: 1; }
+/* ---------- corner furniture: tints of whichever type colour is in force ---------- */
+#corner{position:absolute;left:max(20px,env(safe-area-inset-left,0px));top:22px;z-index:5;height:32px;padding:0 14px 0 15px;border-radius:999px;
+  display:flex;align-items:center;background:rgba(128,128,128,.3);background:color-mix(in srgb,var(--fg) 18%,transparent);color:var(--fg);
+  font:400 12px/1 var(--display);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;pointer-events:none}
+#corner:empty{display:none}
+#ctrl{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:16px;z-index:5;display:flex;gap:8px}
+.cbtn{width:44px;height:44px;padding:0;margin:0;border:0;border-radius:50%;display:grid;place-items:center;cursor:pointer;touch-action:manipulation;
+  background:rgba(128,128,128,.3);background:color-mix(in srgb,var(--fg) 18%,transparent);color:var(--fg);font:400 20px/1 var(--display);
+  transition:transform .15s var(--spring);-webkit-tap-highlight-color:transparent}
+.cbtn:active{transform:scale(.92)}
 
-  .screen { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-  .screen > * { flex: 0 0 auto; }
+/* ---------- screens: each is a full field in its own pair, and arrives as a disc growing from where you tapped ---------- */
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--ground);color:var(--fg);overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding-block:76px 22px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+.screen>.col{width:min(560px,100%);margin-inline:auto;display:flex;flex-direction:column;flex:0 0 auto;gap:26px}
+.screen>.col.fill{flex:1 1 auto;min-height:0;gap:14px}
+.screen>.col.center{flex:1 0 auto;justify-content:center;align-items:center;text-align:center;gap:26px;padding-bottom:54px}
+.wipe{animation:wipe .5s var(--ease) both}
+@keyframes wipe{from{clip-path:circle(0% at var(--ox,50%) var(--oy,50%))}to{clip-path:circle(142% at var(--ox,50%) var(--oy,50%))}}
+@keyframes unwipe{from{clip-path:circle(142% at var(--ox,50%) var(--oy,50%))}to{clip-path:circle(0% at var(--ox,50%) var(--oy,50%))}}
 
-  /* type */
-  .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--mute); font-weight: 700; }
-  h1 { font-size: clamp(62px, 19vw, 112px); line-height: .88; letter-spacing: -.055em; font-weight: 800; margin: 0; text-wrap: balance; }
-  h2 { font-size: clamp(26px, 7vw, 36px); line-height: 1.02; letter-spacing: -.025em; font-weight: 800; margin: 0; text-wrap: balance; }
-  p { margin: 0; line-height: 1.45; }
-  .lede { font-size: 18px; font-weight: 500; max-width: 30ch; }
-  .muted { color: var(--mute); }
+.scores{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px 0 8px;border-radius:999px;font:400 15px/1 var(--display);
+  background:rgba(128,128,128,.3);background:color-mix(in srgb,var(--fg) 18%,transparent)}
+.chip .e{font-size:17px;line-height:1}
 
-  .qcard { margin-top: 14px; background: var(--panel); border: 2px solid var(--ink); border-radius: 20px; overflow: hidden; }
-  .question { font-size: clamp(28px, 8.8vw, 48px); font-weight: 800; line-height: 1.04; letter-spacing: -.035em; text-wrap: balance;
-              padding: 18px 18px 22px; overflow-wrap: anywhere; color: var(--ink); }
-  .qband { display: flex; justify-content: space-between; gap: 12px; padding: 9px 18px; background: var(--field); color: var(--on);
-           font-family: var(--mono); font-size: 10.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+/* ---------- the round ---------- */
+.arena{flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;position:relative;container-type:size;padding-block:10px 6px}
+.big{--d:min(82vw,44vh,400px);
+  --d:max(180px,min(82vw,calc(100cqh - 16px),400px));   /* fill whatever height the question leaves */
+  width:var(--d);height:var(--d);border-radius:50%;border:0;padding:0;margin:0;background:var(--fg);color:var(--ground);display:grid;place-items:center;
+  cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:transform .15s var(--spring),background .12s,color .12s}
+.big.down{transform:scale(.955)}
+.big.early{background:var(--red);color:var(--pink);animation:shake .45s linear}
+.num{display:flex;align-items:baseline;justify-content:center;white-space:nowrap;font:400 40px/1 var(--display)}
+.num b{font-weight:400;display:inline-block;text-align:center}
+.num b.d{width:var(--dw,.6em)}
+.num b.c{width:var(--cw,.26em)}
+.num.is-label{letter-spacing:-.02em}
+.capsule{position:absolute;top:0;left:50%;z-index:2;height:50px;padding:0 24px;border-radius:999px;display:grid;place-items:center;white-space:nowrap;
+  background:var(--red);color:var(--pink);font:400 15px/1 var(--display);letter-spacing:.1em;text-transform:uppercase;pointer-events:none;
+  transform:translate(-50%,-70%) scale(.7);opacity:0;transition:transform .3s var(--spring),opacity .12s}
+.capsule.show{transform:translate(-50%,0) scale(1);opacity:1}
+#giveUp{align-self:center}
+@keyframes shake{10%,90%{transform:translate(-2px,1px)}20%,80%{transform:translate(4px,-2px)}30%,50%,70%{transform:translate(-7px,3px)}40%,60%{transform:translate(7px,-3px)}}
 
-  /* the button: a chunky game piece in the round's color */
-  .stage { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; position: relative; min-height: 0; padding-block: 18px 10px;
-           container-type: size; }
-  .big {
-    --d: min(78vw, 42vh, 360px);
-    --d: max(180px, min(78vw, calc(100cqh - 24px), 360px));   /* fill whatever height the question leaves */
-    width: var(--d); height: var(--d); border-radius: 50%; border: 0; padding: 0;
-    --deep: color-mix(in srgb, var(--field) 62%, black);
-    background: var(--field); color: var(--on);
-    box-shadow: 0 10px 0 var(--deep);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
-    cursor: pointer; touch-action: manipulation; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
-    transition: transform .06s ease, box-shadow .06s ease, background .12s ease, color .12s ease;
-    font-family: var(--mono);
-  }
-  .big.down, .big:active { transform: translateY(8px); box-shadow: 0 2px 0 var(--deep); }
-  .big:focus-visible { outline: 3px solid var(--ink); outline-offset: 5px; }
-  .big.early { background: var(--ink); color: var(--paper); box-shadow: 0 10px 0 var(--mute); animation: shake .42s ease; }
-  .num { font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; letter-spacing: -.04em; white-space: nowrap; }
-  .num.is-label { font-size: clamp(26px, 8vw, 36px); letter-spacing: .14em; padding-left: .14em; }
-  .sub { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; opacity: .7; }
-  .badge {
-    position: absolute; top: 4px; left: 50%; transform: translate(-50%, 6px) scale(.9);
-    background: var(--ink); color: var(--paper); font-family: var(--mono); font-weight: 800; font-size: 14px; letter-spacing: .18em; text-transform: uppercase;
-    padding: 10px 16px 10px 19px; border-radius: 999px; opacity: 0; pointer-events: none; transition: opacity .1s, transform .1s;
-  }
-  .badge.show { opacity: 1; transform: translate(-50%, 0) scale(1); }
-  @keyframes shake {
-    10%, 90% { transform: translateX(-2px); } 20%, 80% { transform: translateX(4px); }
-    30%, 50%, 70% { transform: translateX(-7px); } 40%, 60% { transform: translateX(7px); }
-  }
+/* ---------- the review: the round's pair turned inside out ---------- */
+.block{display:flex;flex-direction:column;gap:12px}
+.answer{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-top:2px}
+.tapline{font-size:22px;line-height:1.2}
+.who{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.pbtn{width:76px;height:76px;padding:0;margin:0;border:0;border-radius:50%;display:grid;place-items:center;font-size:40px;line-height:1;cursor:pointer;touch-action:manipulation;
+  background:rgba(128,128,128,.3);background:color-mix(in srgb,var(--fg) 18%,transparent);transition:transform .15s var(--spring);-webkit-tap-highlight-color:transparent}
+.pbtn:active{transform:scale(.92)}
+.notecard{display:flex;align-items:center;gap:16px;padding:16px 22px 16px 18px;border-radius:30px;background:rgba(128,128,128,.3);background:color-mix(in srgb,var(--fg) 16%,transparent)}
+.notecard .e{font-size:54px;line-height:1}
+.screen>.col>.pill{align-self:flex-start}
+.screen>.col.center>.pill{align-self:center}
+.hero{font-size:clamp(110px,36vmin,180px);line-height:1}
 
-  /* buttons: flat black, or a two-pixel outline */
-  .btn { font-family: var(--mono); font-weight: 800; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; border: 2px solid var(--ink); border-radius: 999px;
-         padding: 16px 24px; background: var(--ink); color: var(--paper); cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
-  .btn.primary { transition: transform .06s, box-shadow .06s; box-shadow: 4px 4px 0 var(--m); }
-  .btn.primary:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--m); }
-  .btn.ghost { background: transparent; color: var(--ink); }
-  .btn:focus-visible, .pbtn:focus-visible, .iconbtn:focus-visible, .link:focus-visible, .seg button:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
-  .link { background: none; border: 0; color: var(--ink); font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; font-weight: 700;
-          text-decoration: underline; text-underline-offset: 4px; cursor: pointer; padding: 12px; align-self: center; touch-action: manipulation; opacity: .75; }
-  .link.armed { opacity: 1; background: var(--ink); color: var(--paper); text-decoration: none; border-radius: 999px; }
-  .stack { display: flex; flex-direction: column; gap: 12px; }
-  .row-btns { display: flex; gap: 10px; flex-wrap: wrap; }
-  .row-btns .btn { flex: 1 1 140px; }
+/* ---------- final scores ---------- */
+.champ{font-size:clamp(84px,28vmin,170px);line-height:1}
+.board{width:100%;display:flex;flex-direction:column}
+.rowb{display:grid;grid-template-columns:auto 1fr auto;align-items:center;column-gap:14px;padding:8px 2px;
+  border-top:1px solid rgba(128,128,128,.4);border-top:1px solid color-mix(in srgb,currentColor 24%,transparent)}
+.rowb:last-child{border-bottom:1px solid rgba(128,128,128,.4);border-bottom:1px solid color-mix(in srgb,currentColor 24%,transparent)}
+.rowb .e{font-size:34px;line-height:1}
+.rowb .total{font:400 clamp(34px,10vmin,64px)/.95 var(--display);letter-spacing:-.06em;text-align:right;min-width:1.2em}
 
-  /* start: a poster */
-  .start { justify-content: center; gap: 26px; padding-block: 14px; }
-  .swatches { display: flex; gap: 6px; }
-  .swatches i { display: block; width: 18px; height: 18px; border-radius: 50%; }
-  .swatches i:nth-child(1) { background: var(--m); } .swatches i:nth-child(2) { background: var(--c); }
-  .swatches i:nth-child(3) { background: var(--y); } .swatches i:nth-child(4) { background: var(--t); } .swatches i:nth-child(5) { background: var(--o); }
-  .rules { display: grid; gap: 12px; border-top: 1.5px solid var(--line); padding-top: 18px; }
-  .rule { display: grid; grid-template-columns: 34px 1fr; gap: 10px; align-items: start; }
-  .rule .k { font-family: var(--mono); font-size: 11px; font-weight: 800; letter-spacing: .08em; padding-top: 4px; }
-  .rule .k { color: var(--m); }
-  .rule p { font-size: 15px; }
+/* ---------- takeovers: a disc of colour that grows from the button to fill the table ---------- */
+.takeover{position:absolute;inset:0;z-index:30;display:grid;place-items:center;overflow:hidden;background:var(--ground);color:var(--fg);cursor:pointer;
+  padding:env(safe-area-inset-top,0px) max(20px,env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(20px,env(safe-area-inset-left,0px));
+  animation:wipe .45s var(--ease) both}
+.takeover.out{animation:unwipe .42s var(--ease) both;pointer-events:none}
+.takeover canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.tk{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px;width:min(600px,100%)}
+.word{font:400 clamp(64px,19vmin,190px)/.92 var(--display);letter-spacing:-.045em;text-wrap:balance;animation:enter .5s .12s var(--spring) both}
+.tk .answer{justify-content:center;animation:enter .5s .22s var(--spring) both}
+.tag{height:46px;padding:0 22px;border-radius:999px;background:var(--fg);color:var(--ground);display:grid;place-items:center;
+  font:400 14px/1 var(--display);letter-spacing:.1em;text-transform:uppercase;animation:enter .5s .3s var(--spring) both,nudge 1.1s .85s ease-in-out infinite}
+.ring{display:none}
+#cele.bull .word{font-size:clamp(76px,23vmin,230px);animation:slam .6s .1s var(--spring) both}
+#cele.bull .tk{animation:shake .5s .34s linear}
+#cele.bull .ring{display:block;position:absolute;left:50%;top:50%;width:44vmin;height:44vmin;margin:-22vmin 0 0 -22vmin;border-radius:50%;
+  box-shadow:inset 0 0 0 3px var(--fg);pointer-events:none;animation:ringout 1.15s var(--ease) both}
+#cele.bull .ring.r2{animation-delay:.2s}
+#cele.bull .ring.r3{animation-delay:.4s}
+#late .word{font-size:clamp(84px,25vmin,240px);animation:slam .5s var(--spring) both}
+@keyframes enter{from{transform:scale(.55);opacity:0}}
+@keyframes slam{from{transform:scale(3.2);opacity:0}}
+@keyframes nudge{0%,100%{transform:rotate(-2.2deg)}50%{transform:rotate(2.2deg)}}
+@keyframes ringout{from{transform:scale(.2);opacity:.9}to{transform:scale(3.6);opacity:0}}
 
-  /* settings */
-  .settings { gap: 0; padding-block: 14px; }
-  .settings .eyebrow { margin-bottom: 8px; }
-  .setting { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; padding-block: 18px; border-top: 1.5px solid var(--line); }
-  .setting:last-of-type { border-bottom: 1.5px solid var(--line); margin-bottom: 18px; }
-  .setting .label { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1 1 180px; }
-  .setting .label b { font-size: 17px; font-weight: 800; }
-  .setting .label p { font-size: 14px; color: var(--mute); }
-  .seg { display: inline-flex; border: 2px solid var(--ink); border-radius: 999px; padding: 3px; gap: 2px; }
-  .seg button { border: 0; background: transparent; border-radius: 999px; padding: 9px 14px; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
-                font-family: var(--mono); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--mute); }
-  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+/* ---------- sheets to read: rules, settings and the deck in black on mint; pause in oxblood on white ---------- */
+.overlay{--ground:var(--mint);--fg:var(--black);position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;
+  background:var(--ground);color:var(--fg);overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding-block:min(84px,14vh) 40px;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px));
+  animation:wipe .45s var(--ease) both}
+#pause{--ground:var(--white);--fg:var(--oxblood);z-index:24}
+#deck{z-index:22}
+.overlay>.col{margin:0 auto;width:min(480px,100%);display:flex;flex-direction:column;gap:28px;text-align:left;flex:0 0 auto}
+.overlay>.col.center{margin:auto;align-items:center;text-align:center}
+.overlay .x{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:16px}
+.overlay h2{margin:0;font:400 clamp(44px,12vmin,76px)/1 var(--display);letter-spacing:-.04em;text-align:center;text-wrap:balance}
+.overlay>.col>.pill{align-self:center}
+.stack{display:flex;flex-direction:column;gap:10px;width:min(280px,100%)}
+.stack .pill{width:100%}
+.group{display:flex;flex-direction:column;gap:10px}
+.group>.pill{align-self:flex-start}
+.hint{font:400 15px/1.5 var(--display);opacity:.68;text-wrap:pretty}
+.hint code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
 
-  /* result: paper, with the round's color kept as a chip */
-  .result { gap: 18px; padding-block: 16px; }
-  .res-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .res-head .eyebrow { background: var(--field); color: var(--on); padding: 6px 11px; border-radius: 999px; }
-  .hit { background: var(--ink); color: var(--paper); font-family: var(--mono); font-weight: 800; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; padding: 6px 11px; border-radius: 999px; }
-  .big-answer { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
-  .ans-num { font-family: var(--display); font-weight: 800; font-size: clamp(64px, 19vw, 112px); line-height: .95; letter-spacing: -.045em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; color: var(--ink); }
-  .ans-unit { font-family: var(--mono); font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--mute); font-weight: 700; }
-  .tapline { font-family: var(--mono); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--mute); margin-top: 6px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; font-weight: 700; }
-  .tapline b { font-weight: 800; font-size: 24px; letter-spacing: -.02em; text-transform: none; color: var(--ink); font-variant-numeric: tabular-nums; }
-  .tapline b.bull { color: var(--m); }
-  .verdict { font-size: 19px; font-weight: 800; line-height: 1.25; max-width: 34ch; }
-  .note { font-size: 17px; line-height: 1.45; color: var(--ink); max-width: 42ch; margin-top: 8px; }
-  .who { display: flex; flex-wrap: wrap; gap: 10px; }
-  .pbtn { width: 74px; height: 74px; border-radius: 18px; font-size: 40px; line-height: 1; background: var(--panel); border: 2px solid var(--ink); cursor: pointer;
-          touch-action: manipulation; -webkit-tap-highlight-color: transparent; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
-  .pbtn:active { transform: scale(.94); }
-  .pbtn.new { width: auto; padding: 0 18px; font-family: var(--mono); font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; border-style: dashed; }
-  .card { background: var(--field); color: var(--on); border-radius: 18px; padding: 18px; display: flex; align-items: center; gap: 16px; }
-  .card .e { font-size: 56px; line-height: 1; }
-  .card p { font-size: 15px; }
+.opts{display:flex;flex-direction:column}
+.opt{width:100%;display:grid;grid-template-columns:1fr auto;column-gap:18px;align-items:center;text-align:left;cursor:pointer;touch-action:manipulation;
+  background:transparent;color:var(--fg);border:0;border-radius:0;margin:0;padding:15px 0;-webkit-tap-highlight-color:transparent;
+  border-top:1px solid rgba(128,128,128,.4);border-top:1px solid color-mix(in srgb,currentColor 24%,transparent)}
+.opt:last-child{border-bottom:1px solid rgba(128,128,128,.4);border-bottom:1px solid color-mix(in srgb,currentColor 24%,transparent)}
+.opt:active{opacity:.55}
+.opt .t{grid-column:1;font:400 22px/1.2 var(--display);letter-spacing:-.01em}
+.opt .d{grid-column:1;font:400 15px/1.45 var(--display);opacity:.68;margin-top:4px}
+.opt::after{content:"";grid-column:2;grid-row:1/span 2;width:24px;height:24px;border-radius:50%;box-shadow:inset 0 0 0 1.5px currentColor;opacity:.4}
+.opt.on::after{opacity:1;background:var(--ground);box-shadow:inset 0 0 0 7.5px var(--fg)}
 
-  /* new player */
-  .center { justify-content: center; align-items: center; text-align: center; gap: 18px; }
-  .hero { font-size: clamp(110px, 36vw, 160px); line-height: 1; }
+.steps{margin:0;padding:0;list-style:none;counter-reset:s;display:flex;flex-direction:column}
+.steps li{counter-increment:s;display:grid;grid-template-columns:36px 1fr;align-items:baseline;padding:13px 0;font:400 17px/1.45 var(--display);
+  border-top:1px solid rgba(128,128,128,.4);border-top:1px solid color-mix(in srgb,currentColor 24%,transparent)}
+.steps li:last-child{border-bottom:1px solid rgba(128,128,128,.4);border-bottom:1px solid color-mix(in srgb,currentColor 24%,transparent)}
+.steps li::before{content:counter(s);font:400 22px/1 var(--display);grid-row:1/span 2}
+.steps b{grid-column:2;font-weight:400}
+.steps span{grid-column:2;opacity:.68}
 
-  /* end: bars in process colors by rank */
-  .end { gap: 18px; padding-block: 14px; }
-  .podium { display: flex; align-items: center; gap: 16px; }
-  .podium .e { font-size: clamp(64px, 20vw, 88px); line-height: 1; }
-  .rank { display: flex; flex-direction: column; gap: 8px; }
-  .row { display: grid; grid-template-columns: 44px 1fr 48px; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 14px; background: var(--panel); border: 2px solid var(--line); }
-  .row.win { border-color: var(--ink); }
-  .row .e { font-size: 32px; line-height: 1; }
-  .barwrap { height: 12px; background: var(--soft); border-radius: 999px; overflow: hidden; min-width: 0; }
-  .fill { height: 100%; background: var(--ink); border-radius: 999px; }
-  .row:nth-child(5n+1) .fill { background: var(--m); } .row:nth-child(5n+2) .fill { background: var(--c); } .row:nth-child(5n+3) .fill { background: var(--y); }
-  .row:nth-child(5n+4) .fill { background: var(--t); } .row:nth-child(5n+5) .fill { background: var(--o); }
-  .pts { font-family: var(--mono); font-weight: 800; font-size: 16px; text-align: right; font-variant-numeric: tabular-nums; }
-  .stats { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--mute); font-weight: 700; }
+textarea{width:100%;min-height:44vh;resize:vertical;border:0;border-radius:18px;padding:14px 16px;-webkit-user-select:text;user-select:text;
+  background:rgba(128,128,128,.2);background:color-mix(in srgb,var(--fg) 10%,transparent);color:var(--fg);
+  font:400 12.5px/1.55 ui-monospace,Menlo,Consolas,monospace}
+textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
 
-  /* editor */
-  .edit { gap: 12px; padding-block: 10px; }
-  textarea { flex: 1 1 260px; min-height: 260px; width: 100%; resize: vertical; border: 2px solid var(--ink); border-radius: 12px; background: var(--panel); color: var(--ink);
-             font-family: var(--mono); font-size: 12px; line-height: 1.5; padding: 12px; }
-  textarea:focus-visible { outline: 2px solid var(--m); outline-offset: 2px; }
-  .help { font-size: 13px; color: var(--mute); }
-  .help code { font-family: var(--mono); font-size: 11.5px; }
-  .status { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--m); min-height: 1.2em; font-weight: 700; }
-
-  /* celebration: the round's color takes over the screen; a bullseye runs through all five and lands on black */
-  .cele { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; overflow: hidden;
-          background: var(--field); color: var(--on); cursor: pointer; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
-          padding: env(safe-area-inset-top, 0px) max(16px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(16px, env(safe-area-inset-left, 0px));
-          animation: cele-in .16s ease-out both; }
-  .cele canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-  .cele-inner { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px; max-width: 600px; width: 100%; }
-  .cele-eyebrow { color: inherit; opacity: .65; }
-  .cele-title { font-family: var(--display); font-weight: 800; font-size: clamp(58px, 17.5vw, 120px); line-height: .88; letter-spacing: -.055em; text-wrap: balance;
-                animation: pop .55s cubic-bezier(.2, 1.5, .4, 1) both; }
-  .cele-numwrap { display: flex; align-items: baseline; justify-content: center; gap: 10px; flex-wrap: wrap; animation: pop .5s .1s cubic-bezier(.2, 1.5, .4, 1) both; max-width: 100%; }
-  .cele-num { font-family: var(--mono); font-weight: 800; font-size: clamp(40px, 12vw, 72px); line-height: 1; letter-spacing: -.03em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
-  .cele-unit { font-family: var(--mono); font-size: 13px; letter-spacing: .14em; text-transform: uppercase; opacity: .8; }
-  .cele-sub { font-family: var(--mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; opacity: .7; animation: cele-in .3s .35s both; }
-  .cele-chip { font-size: 13px; padding: 8px 16px; background: var(--on); color: var(--field); animation: pop .5s .25s cubic-bezier(.2, 1.5, .4, 1) both; }
-  .cele .ring { display: none; }
-  .cele.bull { background: var(--k); color: var(--w); animation: strobe .64s steps(1, end) both; }
-  .cele.bull .cele-title { letter-spacing: -.045em; animation: slam .6s cubic-bezier(.2, 1.6, .4, 1) both; }
-  .cele.bull .cele-title .c { color: var(--c); } .cele.bull .cele-title .m { color: var(--m); } .cele.bull .cele-title .y { color: var(--y); }
-  .cele.bull .cele-title .t { color: var(--t); } .cele.bull .cele-title .o { color: var(--o); }
-  .cele.bull .cele-chip { background: var(--y); color: var(--k); }
-  .cele.bull .ring { display: block; position: absolute; left: 50%; top: 50%; width: 42vmin; height: 42vmin; border: 5px solid var(--m); border-radius: 50%;
-                     transform: translate(-50%, -50%) scale(.2); opacity: 0; animation: ring 1.1s ease-out .05s both; pointer-events: none; }
-  .cele.bull .ring + .ring { animation-delay: .3s; border-width: 3px; border-color: var(--c); }
-  @keyframes cele-in { from { opacity: 0; } to { opacity: 1; } }
-  @keyframes pop { 0% { transform: scale(.4); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-  @keyframes slam { 0% { transform: scale(3.2); opacity: 0; } 55% { transform: scale(.94); opacity: 1; } 100% { transform: scale(1); } }
-  @keyframes ring { 0% { transform: translate(-50%, -50%) scale(.2); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(3.2); opacity: 0; } }
-  @keyframes strobe {
-    0% { background: var(--m); } 16% { background: var(--c); } 32% { background: var(--y); } 48% { background: var(--t); }
-    64% { background: var(--o); } 80% { background: var(--m); } 90%, 100% { background: var(--k); }
-  }
-
-  /* pause */
-  .pause { position: fixed; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center; background: var(--scrim);
-           backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-           padding: env(safe-area-inset-top, 0px) max(16px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(16px, env(safe-area-inset-left, 0px)); }
-  .pause-card { background: var(--panel); color: var(--ink); border: 2px solid var(--ink); border-radius: 22px; padding: 24px; width: min(100%, 360px); display: flex; flex-direction: column; gap: 18px; }
-  .pause-card .btn { width: 100%; }
-  .pause-card .eyebrow { color: var(--mute); }
-  .btn.ghost.armed { border-color: var(--m); color: var(--m); }
-
-  @media (prefers-reduced-motion: reduce) {
-    .big, .btn.primary, .badge { transition: none; }
-    .big.early { animation: none; }
-    .cele, .cele.bull, .cele-title, .cele.bull .cele-title, .cele-numwrap, .cele-sub, .cele-chip, .cele.bull .ring { animation: none; opacity: 1; transform: none; }
-    .cele.bull .ring { display: none; }
-  }
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-<div id="app">
-  <header class="topbar">
-    <span class="brand"><span class="mark" aria-hidden="true"></span>Perfect Timing</span>
-    <span id="roundLabel"></span>
-    <span class="topbar-right">
-      <button class="iconbtn icon" id="pauseBtn" type="button" aria-label="Pause" hidden>
-        <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><rect x="1.5" y="1" width="3.2" height="10" rx="1" fill="currentColor"/><rect x="7.3" y="1" width="3.2" height="10" rx="1" fill="currentColor"/></svg>
-      </button>
-      <button class="iconbtn icon" id="soundBtn" type="button" aria-pressed="true" aria-label="Sound on">
-        <svg id="sndOnIcon" width="14" height="12" viewBox="0 0 14 12" aria-hidden="true"><path d="M1 4h2.5L7 1v10L3.5 8H1z" fill="currentColor"/><path d="M9.5 3.5a3.5 3.5 0 0 1 0 5M11.5 1.5a6.2 6.2 0 0 1 0 9" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-        <svg id="sndOffIcon" width="14" height="12" viewBox="0 0 14 12" aria-hidden="true" hidden><path d="M1 4h2.5L7 1v10L3.5 8H1z" fill="currentColor"/><path d="M9.5 3.5l4 5M13.5 3.5l-4 5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-      </button>
-    </span>
-  </header>
-  <div class="scores" id="scores" hidden></div>
+<div id="stage">
+  <div id="corner"></div>
+  <div id="ctrl">
+    <button class="cbtn" id="pauseBtn" type="button" aria-label="Pause" hidden><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><rect x="6.2" y="5" width="3.6" height="14" rx="1"/><rect x="14.2" y="5" width="3.6" height="14" rx="1"/></svg></button>
+    <button class="cbtn" id="settingsBtn" type="button" aria-label="Settings"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 8h8.5M19.5 8h.5M4 16h.5M11.5 16H20" fill="none"/><circle cx="16" cy="8" r="2.6" fill="none"/><circle cx="8" cy="16" r="2.6" fill="none"/></svg></button>
+    <button class="cbtn" id="helpBtn" type="button" aria-label="How to play">?</button>
+  </div>
 
-  <!-- START -->
-  <section class="screen start" id="screen-start">
-    <div class="stack">
-      <span class="swatches" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
-      <h1>Perfect<br>Timing</h1>
-      <p class="lede">A number climbs from zero. Tap the button the instant it reaches the answer. Not a moment before.</p>
+  <!-- TITLE -->
+  <section class="screen" id="screen-start">
+    <div class="col center">
+      <h1 class="mark">Perfect<br>Timing</h1>
+      <button class="pill" id="playBtn" type="button">Play</button>
     </div>
-    <div class="rules">
-      <div class="rule"><span class="k">01</span><p id="rule1">A question comes up and the number starts climbing right away. Read fast.</p></div>
-      <div class="rule"><span class="k">02</span><p>First to tap at or past the answer wins the round. Within 1.5 seconds of the exact number is a <b>bullseye: double points.</b></p></div>
-      <div class="rule"><span class="k">03</span><p>Too early? The button says so and keeps counting. Try again.</p></div>
-      <div class="rule"><span class="k">04</span><p>If the count reaches <b>double the answer</b> (and at least 10 seconds have gone by), the round is dead and nobody scores. Don't sit on it.</p></div>
-      <div class="rule"><span class="k">05</span><p>Win a round, get an emoji. Ten rounds. Most points wins.</p></div>
-    </div>
-    <div class="stack">
-      <div class="row-btns">
-        <button class="btn primary" id="playBtn" type="button">Play</button>
-        <button class="btn ghost" id="settingsBtn" type="button">Settings</button>
-      </div>
-      <p class="muted" id="deckInfo" style="font-size:13px"></p>
-    </div>
-  </section>
-
-  <!-- SETTINGS -->
-  <section class="screen settings" id="screen-settings" hidden>
-    <span class="eyebrow" style="margin-top:14px">Settings</span>
-    <div class="setting">
-      <div class="label"><b>Count starts</b><p>With the question, or only when someone taps the button.</p></div>
-      <div class="seg" role="group" aria-label="Count starts">
-        <button type="button" id="startAuto" aria-pressed="true">Right away</button>
-        <button type="button" id="startTap" aria-pressed="false">On tap</button>
-      </div>
-    </div>
-    <div class="setting">
-      <div class="label"><b>Units</b><p>Heights, distances and speeds in the deck switch with this. Takes effect from the next game.</p></div>
-      <div class="seg" role="group" aria-label="Units">
-        <button type="button" id="unitMetric" aria-pressed="false">Metric</button>
-        <button type="button" id="unitImperial" aria-pressed="true">Imperial</button>
-      </div>
-    </div>
-    <div class="setting">
-      <div class="label"><b>Sound</b><p>The slow tick, the buzz, the ding.</p></div>
-      <div class="seg" role="group" aria-label="Sound">
-        <button type="button" id="sndOn" aria-pressed="true">On</button>
-        <button type="button" id="sndOff" aria-pressed="false">Off</button>
-      </div>
-    </div>
-    <div class="setting">
-      <div class="label"><b>Deck</b><p id="settingsDeckInfo"></p></div>
-      <button class="btn ghost" id="editBtn" type="button">Edit the deck</button>
-    </div>
-    <button class="btn" id="settingsBack" type="button">Back</button>
   </section>
 
   <!-- ROUND -->
   <section class="screen" id="screen-round" hidden>
-    <div class="qcard">
+    <div class="col fill">
+      <div class="scores" hidden></div>
       <p class="question" id="qText"></p>
+      <div class="arena">
+        <div class="capsule" id="early" aria-live="assertive">Too early</div>
+        <button class="big" id="bigBtn" type="button" aria-label="Tap when the number reaches the answer"><span class="num is-label" id="num">Start</span></button>
+      </div>
+      <button class="pill ghost small" id="giveUp" type="button" hidden>Everyone missed</button>
     </div>
-    <div class="stage">
-      <div class="badge" id="badge" aria-live="assertive">Too early</div>
-      <button class="big" id="bigBtn" type="button" aria-label="Tap when the number reaches the answer">
-        <span class="num is-label" id="num">Start</span>
-        <span class="sub" id="sub">the count</span>
-      </button>
-    </div>
-    <button class="link" id="giveUp" type="button" hidden>Everyone missed</button>
   </section>
 
-  <!-- RESULT -->
-  <section class="screen result" id="screen-result" hidden>
-    <div class="res-head"><span class="eyebrow" id="resEyebrow">Correct</span><span class="hit" id="resHit" hidden>Double points</span></div>
-    <div class="stack" style="gap:6px">
-      <div class="big-answer"><span class="ans-num" id="resAnswerNum">21</span><span class="ans-unit" id="resAnswerUnit">seconds</span></div>
-      <p class="tapline" id="resTapped"><span>Tapped at</span><b id="resTappedNum">23</b></p>
-      <p class="verdict" id="resVerdict" hidden></p>
-      <p class="note" id="resNote"></p>
+  <!-- REVIEW -->
+  <section class="screen" id="screen-result" hidden>
+    <div class="col">
+      <div class="scores" hidden></div>
+      <div class="block">
+        <div class="eyebrow" id="resEyebrow">Correct</div>
+        <div class="answer"><span class="readout" id="resAnswerNum">21</span><span class="eyebrow" id="resAnswerUnit">seconds</span></div>
+        <p class="line tapline" id="resTapped">Tapped at <span id="resTappedNum">23</span></p>
+        <p class="line tapline" id="resVerdict" hidden></p>
+        <p class="line" id="resNote"></p>
+      </div>
+      <div class="block" id="whoBlock">
+        <div class="eyebrow" id="whoLabel">Who got it?</div>
+        <div class="who" id="who"></div>
+      </div>
+      <div class="notecard" id="firstCard" hidden>
+        <span class="e" id="firstEmoji">🦊</span>
+        <p class="line">First on the board. Whoever tapped, that's you from now on. Pick yourself from the lineup next time.</p>
+      </div>
+      <button class="pill" id="nextBtn" type="button" hidden>Next round</button>
     </div>
-    <div class="stack" id="whoBlock">
-      <span class="eyebrow" id="whoLabel">Who got it?</span>
-      <div class="who" id="who"></div>
-    </div>
-    <div class="card" id="firstCard" hidden>
-      <span class="e" id="firstEmoji">🦊</span>
-      <p>First on the board. Whoever tapped, <b>that's you from now on.</b> Pick yourself from the lineup next time.</p>
-    </div>
-    <button class="btn primary" id="nextBtn" type="button" hidden>Next round</button>
   </section>
 
   <!-- NEW PLAYER -->
-  <section class="screen center" id="screen-newplayer" hidden>
-    <span class="eyebrow">New player</span>
-    <div class="hero" id="newEmoji">🐸</div>
-    <h2>You're this now.</h2>
-    <p class="muted" style="max-width:28ch">Point's on the board. Next time you win a round, tap your own face.</p>
-    <button class="btn primary" id="newNextBtn" type="button">Next round</button>
-  </section>
-
-  <!-- END -->
-  <section class="screen end" id="screen-end" hidden>
-    <span class="eyebrow">That's the game</span>
-    <div class="podium">
-      <span class="e" id="endHero">🦊</span>
-      <h2 id="endLine">Wins.</h2>
-    </div>
-    <div class="rank" id="rank"></div>
-    <p class="stats" id="endStats"></p>
-    <div class="row-btns">
-      <button class="btn primary" id="againBtn" type="button">Play again</button>
-      <button class="btn ghost" id="homeBtn" type="button">Back to start</button>
+  <section class="screen" id="screen-newplayer" hidden>
+    <div class="col center">
+      <div class="eyebrow">New player</div>
+      <div class="hero" id="newEmoji">🐸</div>
+      <div class="title2">You're this now.</div>
+      <p class="line dim" style="max-width:26ch">Point's on the board. Next time you win a round, tap your own face.</p>
+      <button class="pill" id="newNextBtn" type="button">Next round</button>
     </div>
   </section>
 
-  <!-- EDITOR -->
-  <section class="screen edit" id="screen-edit" hidden>
-    <span class="eyebrow" style="margin-top:14px">The deck</span>
-    <p class="help">One question per line: <code>question | answer | unit | note</code>. Commas in numbers are fine; lines starting with <code>#</code> are skipped. If a question has an imperial version, put it after <code>||</code> on the same line and the Units setting picks between them. Every round reaches its answer somewhere between 3 and 30 seconds in, and small answers never tick slower than once a second. Each game draws 3 small, 4 medium and 3 big answers, shuffled.</p>
-    <textarea id="deckText" spellcheck="false" aria-label="Deck, one question per line"></textarea>
-    <span class="status" id="editStatus"></span>
-    <div class="row-btns">
-      <button class="btn primary" id="saveDeckBtn" type="button">Save deck</button>
-      <button class="btn ghost" id="resetDeckBtn" type="button">Reset to default</button>
-      <button class="btn ghost" id="backBtn" type="button">Back</button>
+  <!-- FINAL -->
+  <section class="screen" id="screen-end" hidden>
+    <div class="col" style="align-items:center;text-align:center">
+      <div class="eyebrow" id="endEyebrow">Winner</div>
+      <div class="champ" id="endHero">🦊</div>
+      <div class="title2" id="endLine"></div>
+      <div class="board" id="rank"></div>
+      <div class="eyebrow dim" id="endStats"></div>
+      <div class="row">
+        <button class="pill" id="againBtn" type="button">Play again</button>
+        <button class="pill ghost" id="homeBtn" type="button">Home</button>
+      </div>
     </div>
   </section>
-</div>
 
-<!-- CELEBRATION (overlay, shown for a couple of seconds after a correct tap) -->
-<div class="cele" id="cele" hidden>
-  <canvas id="confetti" aria-hidden="true"></canvas>
-  <div class="ring"></div><div class="ring"></div>
-  <div class="cele-inner">
-    <span class="eyebrow cele-eyebrow" id="celeEyebrow">Round 1</span>
-    <div class="cele-title" id="celeTitle">You got it!</div>
-    <div class="cele-numwrap"><span class="cele-num" id="celeNum">23</span><span class="cele-unit" id="celeUnit">seconds</span></div>
-    <span class="hit cele-chip" id="celeChip" hidden>Double points</span>
-    <span class="cele-sub" id="celeSub">0.4 s after it came up</span>
+  <!-- TAKEOVERS -->
+  <div class="takeover" id="cele" hidden>
+    <canvas id="confetti" aria-hidden="true"></canvas>
+    <div class="ring"></div><div class="ring r2"></div><div class="ring r3"></div>
+    <div class="tk">
+      <div class="eyebrow" id="celeEyebrow">Round 1 of 10</div>
+      <div class="word" id="celeTitle">You got it!</div>
+      <div class="answer"><span class="readout" id="celeNum">23</span><span class="eyebrow" id="celeUnit">seconds</span></div>
+      <div class="tag" id="celeChip" hidden>Double points</div>
+      <div class="eyebrow dim" id="celeSub"></div>
+    </div>
   </div>
-</div>
+  <div class="takeover" id="late" style="--ground:var(--red);--fg:var(--pink)" hidden>
+    <div class="tk"><div class="word">Too late</div></div>
+  </div>
 
-<!-- PAUSE -->
-<div class="pause" id="pause" hidden>
-  <div class="pause-card">
-    <div class="stack" style="gap:6px">
-      <span class="eyebrow">Paused</span>
-      <h2 id="pauseTitle">Round 3 of 10</h2>
+  <!-- SHEETS -->
+  <div class="overlay" id="rules" hidden>
+    <button class="cbtn x" type="button" data-close="rules" aria-label="Close"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none"/></svg></button>
+    <div class="col">
+      <h2>How to play</h2>
+      <ol class="steps">
+        <li><b id="rule1b">Read fast.</b><span id="rule1">A question comes up and the number starts climbing right away.</span></li>
+        <li><b>Tap at the answer, or just past it.</b><span>The first person to do it wins the round.</span></li>
+        <li><b>Bullseye.</b><span>Tap within a second and a half of the exact number and the round is worth double.</span></li>
+        <li><b>Too early?</b><span>The button says so and keeps counting. Try again.</span></li>
+        <li><b>Don't sit on it.</b><span>If the count gets to double the answer, the round is dead and nobody scores. Every round gets at least ten seconds.</span></li>
+        <li><b>Win.</b><span>Winners get an emoji. Most points after ten rounds takes it.</span></li>
+      </ol>
+      <button class="pill" type="button" data-close="rules">Got it</button>
     </div>
-    <div class="stack">
-      <button class="btn primary" id="resumeBtn" type="button">Resume</button>
-      <button class="btn ghost" id="quitBtn" type="button">Quit game</button>
+  </div>
+
+  <div class="overlay" id="settings" hidden>
+    <button class="cbtn x" type="button" data-close="settings" aria-label="Close"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none"/></svg></button>
+    <div class="col">
+      <h2>Settings</h2>
+      <div class="group">
+        <div class="eyebrow">Count starts</div>
+        <div class="opts">
+          <button class="opt" id="startAuto" type="button"><span class="t">Right away</span><span class="d">The number starts climbing the moment the question appears.</span></button>
+          <button class="opt" id="startTap" type="button"><span class="t">On tap</span><span class="d">Read first. The count waits for someone to tap Start.</span></button>
+        </div>
+      </div>
+      <div class="group">
+        <div class="eyebrow">Units</div>
+        <div class="opts">
+          <button class="opt" id="unitImperial" type="button"><span class="t">Imperial</span><span class="d">Pounds, miles, Fahrenheit.</span></button>
+          <button class="opt" id="unitMetric" type="button"><span class="t">Metric</span><span class="d">Kilograms, kilometers, Celsius.</span></button>
+        </div>
+      </div>
+      <div class="group">
+        <div class="eyebrow">Sound</div>
+        <div class="opts">
+          <button class="opt" id="sndOn" type="button"><span class="t">On</span></button>
+          <button class="opt" id="sndOff" type="button"><span class="t">Off</span></button>
+        </div>
+      </div>
+      <div class="group">
+        <div class="eyebrow">The deck</div>
+        <p class="hint" id="settingsDeckInfo"></p>
+        <button class="pill ghost" id="editBtn" type="button">Edit the deck</button>
+      </div>
+      <button class="pill" type="button" data-close="settings">Done</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="deck" hidden>
+    <button class="cbtn x" type="button" data-close="deck" aria-label="Close"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none"/></svg></button>
+    <div class="col">
+      <h2>The deck</h2>
+      <p class="hint">One question per line: <code>question | answer | unit | note</code>. Commas in numbers are fine, and lines starting with <code>#</code> are skipped. If a question has an imperial version, put it after <code>||</code> on the same line and the Units setting picks between them.</p>
+      <textarea id="deckText" spellcheck="false" aria-label="Deck, one question per line"></textarea>
+      <div class="eyebrow" id="editStatus"></div>
+      <div class="row" style="justify-content:flex-start">
+        <button class="pill" id="saveDeckBtn" type="button">Save</button>
+        <button class="pill ghost" id="resetDeckBtn" type="button">Reset to default</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="pause" hidden>
+    <div class="col center">
+      <h2>Paused</h2>
+      <div class="eyebrow" id="pauseTitle">Round 3 of 10</div>
+      <div class="stack">
+        <button class="pill" id="resumeBtn" type="button">Resume</button>
+        <button class="pill ghost" id="quitBtn" type="button">Quit game</button>
+      </div>
     </div>
   </div>
 </div>
@@ -455,14 +379,15 @@
   const T_MIN = 3;              // seconds until the count reaches the answer: drawn evenly from this range,
   const T_MAX = 30;             // so some rounds are over as you finish reading and some crawl for half a minute
   const BULLSEYE_SECS = 1.5;    // tap within this many seconds of the exact number for double points
+  const DEAD_MULT = 2;          // the round dies when the count reaches this multiple of the answer...
   const DEAD_MIN_SECS = 10;     // ...but never before the clock has run this long, so fast rounds stay winnable
-  const DEAD_MULT = 2;          // the round dies when the count reaches this multiple of the answer
   const SMALL_MAX = 30;         // deck tiers for the per-game draw: ≤30 / 31–9,999 / 10,000+
   const PICK = { small: 3, medium: 4, big: 3 };
   const TICK_RATE_MAX = 12;     // tick sound per step only while steps are this slow or slower
   const START_LOCK_MS = 500;    // ignore taps right after the count starts (double-tap guard)
   const EARLY_LOCK_MS = 250;
-  const EARLY_SHOW_MS = 650;
+  const EARLY_SHOW_MS = 700;
+  const LATE_SHOW_MS = 1200;    // how long "Too late" holds the screen
 
   // question | answer | unit | note. An entry with {m, i} has a metric and an imperial version.
   const DEFAULT_DECK = [
@@ -763,6 +688,14 @@
 
   const EMOJI = ['🦊','🐸','🐙','🦄','🐢','🦩','🐝','🦕','🍄','🌵','🎃','👻','🤖','👽','🐧','🦔','🥑','🍕','🌈','🦋','🐳','🦀','🍩','🚀'];
 
+  // ───────────── colour: every screen is a pair, [ground, type] ─────────────
+  const C = { oxblood: '#652114', pink: '#ff96d9', rust: '#943821', yellow: '#fff57d', peri: '#7f9ad1', mint: '#9dffb2', orange: '#ff8800', black: '#000000', red: '#ff0000', white: '#ffffff' };
+  const HOME = [C.yellow, C.rust];
+  const FINAL = [C.rust, C.yellow];
+  const BULL = [C.orange, C.black];
+  const ROUND_PAIRS = [[C.pink, C.oxblood], [C.mint, C.black], [C.peri, C.black], [C.oxblood, C.pink], [C.yellow, C.rust]];
+  const flip = (p) => [p[1], p[0]];
+
   // ───────────── helpers ─────────────
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => Math.floor(n).toLocaleString('en-US');
@@ -773,6 +706,8 @@
     del(k) { try { localStorage.removeItem(k); } catch (e) { /* fine */ } }
   };
   const vibrate = (p) => { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) { /* fine */ } };
+  const reduceMotion = (() => { try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } })();
+  const root = document.documentElement;
 
   // ───────────── sound (tiny synth, unlocked by the first tap) ─────────────
   const sound = (() => {
@@ -812,7 +747,7 @@
     };
   })();
 
-  // ───────────── units ─────────────
+  // ───────────── settings ─────────────
   let units = store.get('notyet.units', 'imperial') === 'metric' ? 'metric' : 'imperial';
   let autoStart = store.get('notyet.autostart', true) !== false;   // the count starts with the question, not on a tap
   const norm = (e) => Array.isArray(e) ? { m: e, i: e } : { m: e.m, i: e.i || e.m };
@@ -878,36 +813,107 @@
     phase: 'start', round: 0, total: ROUNDS, questions: [], players: [], pool: [],
     tooEarly: 0, unclaimed: 0, dead: 0, bullseyes: 0, current: null, pts: 1, after: 0, bullseye: false, celeTimer: 0, celeSkipAt: 0,
     paused: false, pausedPhase: '', pausedAt: 0, quitTimer: 0,
-    rate: 0, t0: 0, displayed: 0, running: false, lockUntil: 0, raf: 0, minLen: 1, lastLen: 0, cw: 0.62, earlyTimer: 0, armTimer: 0
+    rate: 0, t0: 0, displayed: 0, running: false, lockUntil: 0, raf: 0, minStr: '0', lastLen: 0, earlyTimer: 0, armTimer: 0
   };
 
-  function show(name) {
-    for (const s of document.querySelectorAll('.screen')) s.hidden = (s.id !== 'screen-' + name);
-    const inGame = name === 'round' || name === 'result' || name === 'newplayer';
-    $('roundLabel').textContent = inGame ? `Round ${state.round} of ${state.total}` : (name === 'end' ? 'Final' : '');
-    $('pauseBtn').hidden = !inGame;
-    if (!inGame) delete document.body.dataset.ink;
-    $('scores').hidden = !(inGame || name === 'end') || state.players.length === 0;
-    document.querySelector('#screen-' + name).scrollTop = 0;
+  // ───────────── screens ─────────────
+  let cur = 'start', wipeTimer = 0, tapX = null, tapY = null;
+  document.addEventListener('pointerdown', (e) => { tapX = e.clientX; tapY = e.clientY; }, true);
+
+  function setPair(p) {
+    root.style.setProperty('--ground', p[0]); root.style.setProperty('--fg', p[1]);
+    const tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.setAttribute('content', p[0]);
   }
+  function origin(el, x, y) {
+    el.style.setProperty('--ox', (x == null ? window.innerWidth / 2 : x) + 'px');
+    el.style.setProperty('--oy', (y == null ? window.innerHeight / 2 : y) + 'px');
+  }
+  // Bring a screen up in its pair. It grows as a disc from the last tap unless `instant` (used under a takeover).
+  function show(name, pair, instant) {
+    const next = $('screen-' + name), prev = $('screen-' + cur);
+    document.querySelectorAll('.screen').forEach(s => { if (s !== next && s !== prev) { s.hidden = true; s.classList.remove('wipe'); s.style.zIndex = ''; } });
+    clearTimeout(wipeTimer);
+    next.style.setProperty('--ground', pair[0]); next.style.setProperty('--fg', pair[1]);
+    next.classList.remove('wipe'); prev.classList.remove('wipe');
+    next.hidden = false; next.scrollTop = 0;
+    if (prev !== next) {
+      if (instant || reduceMotion) { prev.hidden = true; prev.style.zIndex = ''; next.style.zIndex = ''; }
+      else {
+        prev.style.zIndex = '1'; next.style.zIndex = '2';
+        origin(next, tapX, tapY);
+        void next.offsetWidth; next.classList.add('wipe');
+        wipeTimer = setTimeout(() => { prev.hidden = true; prev.style.zIndex = ''; next.style.zIndex = ''; next.classList.remove('wipe'); }, 540);
+      }
+    }
+    cur = name;
+    setPair(pair);
+    const inGame = name === 'round' || name === 'result' || name === 'newplayer';
+    $('corner').textContent = inGame ? `Round ${state.round}/${state.total}` : (name === 'end' ? 'Final' : '');
+    $('pauseBtn').hidden = !inGame;
+    $('settingsBtn').hidden = name !== 'start';
+    $('helpBtn').hidden = name !== 'start';
+  }
+  const roundPair = () => ROUND_PAIRS[(Math.max(1, state.round) - 1) % ROUND_PAIRS.length];
 
   function renderScores() {
-    const el = $('scores'); el.innerHTML = '';
-    for (const p of state.players) {
-      const c = document.createElement('span'); c.className = 'chip';
-      const e = document.createElement('span'); e.className = 'e'; e.textContent = p.e;
-      const n = document.createElement('span'); n.textContent = p.score;
-      c.append(e, n); el.appendChild(c);
-    }
-    el.hidden = state.players.length === 0;
+    document.querySelectorAll('.scores').forEach(el => {
+      el.textContent = '';
+      for (const p of state.players) {
+        const c = document.createElement('span'); c.className = 'chip';
+        const e = document.createElement('span'); e.className = 'e'; e.textContent = p.e;
+        const n = document.createElement('span'); n.textContent = p.score;
+        c.append(e, n); el.appendChild(c);
+      }
+      el.hidden = state.players.length === 0;
+    });
   }
 
-  function renderStart() {
+  function deckCounts() {
     const all = deck.map(variant);
     const small = all.filter(d => d[1] <= SMALL_MAX).length, big = all.filter(d => d[1] >= 10000).length;
-    const withUnits = deck.filter(e => e.i !== e.m).length;
-    $('deckInfo').textContent = `${deck.length} questions in the deck (${small} small, ${deck.length - small - big} medium, ${big} big). Ten per game, ${units} units.`;
-    $('settingsDeckInfo').textContent = `${deck.length} questions, ${withUnits} of them with a version in each unit system. Add your own, or cut the ones you don't like.`;
+    return { total: deck.length, small, medium: deck.length - small - big, big, both: deck.filter(e => e.i !== e.m).length };
+  }
+
+  // ───────────── type fitting ─────────────
+  // Digits are set in fixed-width cells so a racing count doesn't shimmer; the cell widths are measured from the real font.
+  const M = { dw: 0.6, cw: 0.26 };
+  let mctx = null;
+  function fontOf(el) { return `400 200px ${getComputedStyle(el).fontFamily}`; }
+  function measure() {
+    try {
+      mctx = mctx || document.createElement('canvas').getContext('2d');
+      mctx.font = fontOf($('num'));
+      let w = 0; for (const d of '0123456789') w = Math.max(w, mctx.measureText(d).width);
+      const cw = mctx.measureText(',').width;
+      if (w > 60 && w < 200) { M.dw = w / 200 * 0.96; M.cw = Math.max(0.16, cw / 200); }
+    } catch (e) { /* keep the defaults */ }
+    const n = $('num'); n.style.setProperty('--dw', M.dw + 'em'); n.style.setProperty('--cw', M.cw + 'em');
+  }
+  const cellsEm = (s) => { let w = 0; for (const ch of s) w += (ch === ',' ? M.cw : M.dw); return w; };
+
+  // The biggest size at which the count still fits inside the disc: its bounding box is a rectangle
+  // centred in the circle, so its corner has to stay inside the rim. Sized for where the count is headed.
+  function fitNum(s) {
+    const ref = s.length >= state.minStr.length ? s : state.minStr;
+    if (ref.length === state.lastLen) return;
+    state.lastLen = ref.length;
+    const d = $('bigBtn').clientWidth; if (!d) return;
+    const r = d / 2 * 0.88;
+    const size = Math.min(d * 0.6, r / Math.hypot(cellsEm(ref) / 2, 0.36));
+    $('num').style.fontSize = Math.max(22, Math.floor(size)) + 'px';
+  }
+  function setNum(s) {
+    let h = ''; for (const ch of s) h += ch === ',' ? '<b class="c">,</b>' : '<b class="d">' + ch + '</b>';
+    $('num').innerHTML = h;
+    fitNum(s);
+  }
+  // A one-line readout sized to the width it has.
+  function fitReadout(el, s, maxPx, avail) {
+    el.textContent = s;
+    let em = s.length * 0.55;
+    try { mctx = mctx || document.createElement('canvas').getContext('2d'); mctx.font = fontOf(el); em = mctx.measureText(s).width / 200; } catch (e) { /* estimate */ }
+    em = Math.max(0.4, em - 0.05 * s.length);                      // the readout is tracked in by .05em a character
+    el.style.fontSize = Math.max(34, Math.floor(Math.min(maxPx, avail / em))) + 'px';
   }
 
   // ───────────── game flow ─────────────
@@ -924,31 +930,28 @@
     stopCount();
     state.round++;
     state.current = state.questions[state.round - 1];
-    document.body.dataset.ink = 'mcyto'[(state.round - 1) % 5];            // each round takes the next color
     $('qText').textContent = state.current[0];
     const num = $('num');
     num.classList.add('is-label'); num.style.fontSize = ''; num.textContent = 'Start';
-    $('sub').hidden = false;
     $('giveUp').hidden = true; disarmGiveUp();
     $('bigBtn').classList.remove('early', 'down');
     state.phase = 'ready'; state.lastLen = 0;
-    show('round');
+    show('round', roundPair());
     if (autoStart) startCount();
   }
 
   function startCount() {
     const a = state.current[1];
     state.rate = rateFor(a);
-    state.minLen = fmt(state.rate * T_MAX).length;   // size the digits for where the count is headed, from the rate alone
-    state.displayed = 0;
+    measure();
+    state.minStr = fmt(state.rate * T_MAX);           // size the digits for where the count is headed, from the rate alone
+    state.displayed = 0; state.lastLen = 0;
     state.t0 = performance.now();
     state.lockUntil = state.t0 + START_LOCK_MS;
     state.running = true; state.phase = 'counting';
-    const num = $('num');
-    num.classList.remove('is-label'); num.textContent = '0';
-    $('sub').hidden = true; $('giveUp').hidden = false;
-    state.cw = charWidth();
-    fitNum(1);
+    $('num').classList.remove('is-label');
+    setNum('0');
+    $('giveUp').hidden = false;
     sound.click();
     state.raf = requestAnimationFrame(loop);
   }
@@ -956,46 +959,21 @@
   function loop(ts) {
     if (!state.running) return;
     const v = (ts - state.t0) / 1000 * state.rate;
-    const d = Math.floor(v);
+    const d = Math.max(0, Math.floor(v));
     if (d !== state.displayed) {
       state.displayed = d;
-      const s = fmt(d);
-      $('num').textContent = s;
-      fitNum(s.length);
+      setNum(fmt(d));
       if (state.rate <= TICK_RATE_MAX) sound.tick();
     }
     if (v >= state.current[1] * DEAD_MULT && (ts - state.t0) / 1000 >= DEAD_MIN_SECS) { deadRound(); return; }
     state.raf = requestAnimationFrame(loop);
   }
 
-  // Width of one digit in the number font, in ems, measured rather than guessed (commas are the same width in a monospace face).
-  function charWidth() {
-    try {
-      const c = document.createElement('canvas').getContext('2d');
-      c.font = `800 100px ${getComputedStyle($('num')).fontFamily}`;
-      const w = c.measureText('0').width / 100;
-      return w > 0.3 && w < 1 ? w : 0.62;
-    } catch (e) { return 0.62; }
-  }
-
-  // The biggest font size at which L characters still fit inside the circle: the text's bounding
-  // box is a rectangle centred in the disc, so its corner has to stay inside the rim.
-  function fitNum(len) {
-    const L = Math.max(len, state.minLen);
-    if (L === state.lastLen) return;
-    state.lastLen = L;
-    const d = $('bigBtn').clientWidth; if (!d) return;
-    const r = d / 2 * 0.94;                               // a little air inside the rim
-    const halfW = L * (state.cw || 0.62) / 2, halfH = 0.37; // in ems: half the text width, half a digit's height
-    const size = Math.min(d * 0.8, r / Math.hypot(halfW, halfH));
-    $('num').style.fontSize = Math.max(22, Math.floor(size)) + 'px';
-  }
-
   function stopCount() {
     state.running = false;
     cancelAnimationFrame(state.raf);
     clearTimeout(state.earlyTimer);
-    $('badge').classList.remove('show');
+    $('early').classList.remove('show');
     $('bigBtn').classList.remove('early');
   }
 
@@ -1012,11 +990,11 @@
     state.tooEarly++;
     state.lockUntil = now + EARLY_LOCK_MS;
     sound.buzz(); vibrate(60);
-    const b = $('bigBtn'), badge = $('badge');
+    const b = $('bigBtn'), cap = $('early');
     b.classList.remove('early'); void b.offsetWidth; b.classList.add('early');
-    badge.classList.add('show');
+    cap.classList.add('show');
     clearTimeout(state.earlyTimer);
-    state.earlyTimer = setTimeout(() => { badge.classList.remove('show'); b.classList.remove('early'); }, EARLY_SHOW_MS);
+    state.earlyTimer = setTimeout(() => { cap.classList.remove('show'); b.classList.remove('early'); }, EARLY_SHOW_MS);
   }
 
   function correct(after) {
@@ -1029,10 +1007,19 @@
     celebrate();
   }
 
-  // ───────────── celebration ─────────────
-  const reduceMotion = (() => { try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } })();
+  function deadRound() {
+    stopCount();
+    state.dead++;
+    sound.dead(); vibrate(120);
+    state.phase = 'late';
+    const el = $('late'); el.classList.remove('out'); discOrigin(el); el.hidden = false;
+    clearTimeout(state.celeTimer);
+    state.celeTimer = setTimeout(() => { showResult(false, 'dead', true); fadeOut(el); }, reduceMotion ? 800 : LATE_SHOW_MS);
+  }
+
+  // ───────────── takeovers ─────────────
   const WIN_LINES = ['You got it!', 'Nailed it.', 'That\'s the one.', 'Yes!', 'Right on.', 'Got it!', 'Ding ding.'];
-  const confetti = (() => {
+  const dots = (() => {
     let parts = [], raf = 0, cv = null, ctx = null, running = false;
     function size() {
       const dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -1044,8 +1031,7 @@
         const ang = Math.random() * Math.PI * 2, sp = (0.35 + Math.random() * 0.65) * power;
         let vx = Math.cos(ang) * sp, vy = Math.sin(ang) * sp - power * 0.35;
         if (dirX) { vx = Math.abs(vx) * dirX; vy = -Math.abs(vy) - power * 0.3; }
-        parts.push({ x, y, vx, vy, w: 6 + Math.random() * 8, h: 4 + Math.random() * 6, rot: Math.random() * Math.PI, vr: (Math.random() - 0.5) * 0.4,
-                     c: colors[Math.floor(Math.random() * colors.length)] });
+        parts.push({ x, y, vx, vy, r: 3.5 + Math.random() * 7.5, c: colors[Math.floor(Math.random() * colors.length)] });
       }
     }
     function tick() {
@@ -1053,27 +1039,27 @@
       ctx.clearRect(0, 0, innerWidth, innerHeight);
       let alive = 0;
       for (const p of parts) {
-        p.vy += 0.35; p.vx *= 0.99; p.vy *= 0.995; p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+        p.vy += 0.3; p.vx *= 0.99; p.vy *= 0.995; p.x += p.vx; p.y += p.vy;
         if (p.y > innerHeight + 40) continue;
         alive++;
-        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.fillStyle = p.c; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); ctx.restore();
+        ctx.fillStyle = p.c; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.2832); ctx.fill();
       }
       if (alive) raf = requestAnimationFrame(tick); else running = false;
     }
     return {
-      start(level) {
+      start(level, pair, x, y) {
         if (reduceMotion) return;
         try {
           cv = $('confetti'); ctx = cv.getContext('2d'); if (!ctx) return;
           size(); parts = []; running = true; cancelAnimationFrame(raf);
           const W = innerWidth, H = innerHeight;
-          const cmy = ['#EC1C8C', '#3D6BFF', '#FFC629', '#19B5B0', '#FF6B2C', '#FFFFFF'];
           if (level === 2) {
-            burst(240, W / 2, H * 0.45, cmy, 22, 0);
-            burst(100, 0, H, cmy, 27, 1); burst(100, W, H, cmy, 27, -1);
-            setTimeout(() => { if (running) burst(160, W / 2, H * 0.4, cmy, 19, 0); }, 380);
+            const cols = [C.black, C.white, C.pink, C.mint, C.oxblood];
+            burst(240, x, y, cols, 15, 0);
+            burst(100, 0, H, cols, 20, 1); burst(100, W, H, cols, 20, -1);
+            setTimeout(() => { if (running) burst(160, W / 2, H * 0.42, cols, 13, 0); }, 380);
           } else {
-            burst(150, W / 2, H * 0.45, ['#FFFFFF', '#121212', '#FFC629'], 18, 0);
+            burst(140, x, y, [pair[1], pair[1], C.white], 13, 0);
           }
           raf = requestAnimationFrame(tick);
         } catch (e) { running = false; }
@@ -1082,96 +1068,60 @@
     };
   })();
 
+  function discOrigin(el) {
+    const r = $('bigBtn').getBoundingClientRect();
+    const x = r.width ? r.left + r.width / 2 : null, y = r.width ? r.top + r.height / 2 : null;
+    origin(el, x, y);
+    return [x == null ? innerWidth / 2 : x, y == null ? innerHeight / 2 : y];
+  }
+  function fadeOut(el) {
+    if (reduceMotion) { el.hidden = true; return; }
+    el.classList.add('out');
+    setTimeout(() => { el.hidden = true; el.classList.remove('out'); }, 430);
+  }
+
   function celebrate() {
-    const bull = state.bullseye;
-    const el = $('cele');
-    el.classList.toggle('bull', bull);
+    const bull = state.bullseye, el = $('cele');
+    const pair = bull ? BULL : flip(roundPair());                    // a win turns the round inside out; a bullseye is black on orange
+    el.style.setProperty('--ground', pair[0]); el.style.setProperty('--fg', pair[1]);
+    el.classList.remove('out'); el.classList.toggle('bull', bull);
     $('celeEyebrow').textContent = `Round ${state.round} of ${state.total}`;
-    const title = $('celeTitle'); title.textContent = '';
-    if (bull) {                                                            // one letter per color
-      'Bullseye!'.split('').forEach((ch, i) => { const s = document.createElement('span'); s.className = 'mcyto'[i % 5]; s.textContent = ch; title.appendChild(s); });
-    } else {
-      title.textContent = WIN_LINES[Math.floor(Math.random() * WIN_LINES.length)];
-    }
-    $('celeNum').textContent = bull ? state.current[1].toLocaleString('en-US') : fmt(state.displayed);   // a bullseye shows the real answer, a plain win the number you hit
+    $('celeTitle').textContent = bull ? 'Bullseye!' : WIN_LINES[Math.floor(Math.random() * WIN_LINES.length)];
+    const shown = bull ? state.current[1].toLocaleString('en-US') : fmt(state.displayed);   // a bullseye shows the real answer, a plain win the number you hit
     $('celeUnit').textContent = state.current[2] || '';
     $('celeChip').hidden = !bull;
-    $('celeSub').hidden = bull;                                     // a bullseye speaks for itself
+    $('celeSub').hidden = bull;
     $('celeSub').textContent = bull ? '' : state.after < 0.05 ? 'On the nose' : `${state.after.toFixed(1)} s after it came up`;
+    const [x, y] = discOrigin(el);
     state.phase = 'cele';
     el.hidden = false;
-    confetti.start(bull ? 2 : 1);
-    const now = performance.now();
-    state.celeSkipAt = now + 650;                                   // a tap after this skips ahead (slams right after the win don't)
+    fitReadout($('celeNum'), shown, Math.min(120, innerWidth * 0.24), Math.min(innerWidth - 48, 560));
+    dots.start(bull ? 2 : 1, pair, x, y);
+    state.celeSkipAt = performance.now() + 650;                     // a tap after this skips ahead (slams right after the win don't)
     clearTimeout(state.celeTimer);
     state.celeTimer = setTimeout(endCelebration, reduceMotion ? 1200 : bull ? 3000 : 1900);
   }
   function endCelebration() {
     clearTimeout(state.celeTimer);
     if (state.phase !== 'cele') return;
-    confetti.stop();
-    $('cele').hidden = true;
-    showResult(true);
+    dots.stop();
+    showResult(true, '', true);
+    fadeOut($('cele'));
   }
 
-  // ───────────── pause / quit ─────────────
-  function pauseGame() {
-    const p = state.phase;
-    if (state.paused || !(p === 'ready' || p === 'counting' || p === 'result' || p === 'newplayer')) return;
-    state.paused = true; state.pausedPhase = p; state.pausedAt = performance.now();
-    if (p === 'counting') { state.running = false; cancelAnimationFrame(state.raf); }   // freeze the clock where it is
-    disarmQuit();
-    $('pauseTitle').textContent = `Round ${state.round} of ${state.total}`;
-    $('pause').hidden = false;
-  }
-  function resumeGame() {
-    if (!state.paused) return;
-    const gap = performance.now() - state.pausedAt;
-    if (state.pausedPhase === 'counting') {
-      state.t0 += gap;                                                         // the count picks up exactly where it stopped
-      state.lockUntil = Math.max(state.lockUntil + gap, performance.now() + 300);
-      state.running = true; state.raf = requestAnimationFrame(loop);
-    }
-    state.paused = false;
-    $('pause').hidden = true;
-  }
-  function quitGame() {
-    const q = $('quitBtn');
-    if (!q.classList.contains('armed')) {
-      q.classList.add('armed'); q.textContent = 'Sure? Tap again to quit';
-      clearTimeout(state.quitTimer); state.quitTimer = setTimeout(disarmQuit, 2500);
-      return;
-    }
-    disarmQuit();
-    stopCount(); confetti.stop(); clearTimeout(state.celeTimer); $('cele').hidden = true;
-    state.paused = false; $('pause').hidden = true;
-    state.phase = 'start'; state.round = 0; state.players = []; renderScores();
-    renderStart(); show('start');
-  }
-  function disarmQuit() { clearTimeout(state.quitTimer); const q = $('quitBtn'); q.classList.remove('armed'); q.textContent = 'Quit game'; }
-
-  function deadRound() {
-    stopCount();
-    state.dead++;
-    sound.dead(); vibrate(120);
-    showResult(false, 'dead');
-  }
-
-  function showResult(won, why) {
+  // ───────────── the review ─────────────
+  function showResult(won, why, instant) {
     const [, a, u, note] = state.current;
     state.phase = 'result';
     if (!won) { state.pts = 0; state.bullseye = false; }
-    $('resEyebrow').textContent = won ? (state.bullseye ? 'Bullseye' : 'Correct') : (why === 'dead' ? 'Too late' : 'Nobody got it');
-    $('resHit').hidden = !(won && state.bullseye);
+    $('resEyebrow').textContent = won ? (state.bullseye ? 'Bullseye · double points' : 'Correct') : (why === 'dead' ? 'Too late' : 'Everyone missed');
+    $('resAnswerUnit').textContent = u || '';
     $('resTapped').hidden = !won;
     $('resTappedNum').textContent = fmt(state.displayed);
-    $('resTappedNum').classList.toggle('bull', won && state.bullseye);
     $('resVerdict').hidden = won || why !== 'dead';
     $('resVerdict').textContent = `The count ran to ${fmt(state.displayed)} before anyone tapped. Nobody scores.`;
-    $('resAnswerNum').textContent = a.toLocaleString('en-US');
-    $('resAnswerUnit').textContent = u || '';
     $('resNote').textContent = note || ''; $('resNote').hidden = !note;
-    const who = $('who'); who.innerHTML = '';
+    const who = $('who'); who.textContent = '';
     $('whoBlock').hidden = true; $('firstCard').hidden = true; $('nextBtn').hidden = true;
     if (!won) {
       $('nextBtn').hidden = false;
@@ -1190,13 +1140,16 @@
         b.addEventListener('click', () => award(i));
         who.appendChild(b);
       });
-      const nb = document.createElement('button'); nb.className = 'pbtn new'; nb.type = 'button'; nb.textContent = 'Someone new';
+      const nb = document.createElement('button'); nb.className = 'pill ghost'; nb.type = 'button'; nb.textContent = 'Someone new';
       nb.addEventListener('click', awardNew);
       who.appendChild(nb);
     }
-    show('result');
-    $('nextBtn').textContent = state.round >= state.total ? 'See the scores' : 'Next round';
+    const last = state.round >= state.total;
+    $('nextBtn').textContent = last ? 'Final scores' : 'Next round';
     $('newNextBtn').textContent = $('nextBtn').textContent;
+    show('result', flip(roundPair()), instant);
+    const col = $('screen-result').querySelector('.col');
+    fitReadout($('resAnswerNum'), a.toLocaleString('en-US'), Math.min(150, innerWidth * 0.32), col.clientWidth || 320);
   }
 
   function takeEmoji() {
@@ -1210,20 +1163,20 @@
     renderScores();
     $('newEmoji').textContent = e;
     state.phase = 'newplayer';
-    show('newplayer');
+    show('newplayer', flip(roundPair()));
   }
   function advance() { sound.unlock(); if (state.round >= state.total) endGame(); else startRound(); }
 
   function armGiveUp() {
     const g = $('giveUp');
     if (g.classList.contains('armed')) { disarmGiveUp(); stopCount(); state.unclaimed++; showResult(false); return; }
-    g.classList.add('armed'); g.textContent = 'Sure? Tap again to reveal';
+    g.classList.add('armed'); g.textContent = 'Sure? Tap again';
     clearTimeout(state.armTimer);
     state.armTimer = setTimeout(disarmGiveUp, 2500);
   }
   function disarmGiveUp() {
     clearTimeout(state.armTimer);
-    const g = $('giveUp'); g.classList.remove('armed'); g.textContent = "Everyone missed";
+    const g = $('giveUp'); g.classList.remove('armed'); g.textContent = 'Everyone missed';
   }
 
   function endGame() {
@@ -1231,62 +1184,93 @@
     const ps = state.players.slice().sort((x, y) => y.score - x.score);
     const top = ps.length ? ps[0].score : 0;
     const winners = ps.filter(p => p.score === top);
+    $('endEyebrow').textContent = !ps.length ? 'Game over' : winners.length === 1 ? 'Winner' : 'Tie game';
     $('endHero').textContent = ps.length ? winners.map(p => p.e).join(' ') : '🫥';
-    $('endLine').textContent = !ps.length ? 'Nobody scored. Tough deck.' : winners.length === 1 ? `Wins with ${top} point${top === 1 ? '' : 's'}.` : `Tie at ${top}.`;
-    const rank = $('rank'); rank.innerHTML = '';
+    $('endLine').textContent = !ps.length ? 'Nobody scored. Tough deck.' : winners.length === 1 ? `Wins with ${top} point${top === 1 ? '' : 's'}.` : `Tied at ${top}.`;
+    const rank = $('rank'); rank.textContent = '';
     for (const p of ps) {
-      const row = document.createElement('div'); row.className = 'row' + (p.score === top ? ' win' : '');
+      const row = document.createElement('div'); row.className = 'rowb';
       const e = document.createElement('span'); e.className = 'e'; e.textContent = p.e;
-      const wrap = document.createElement('div'); wrap.className = 'barwrap';
-      const bar = document.createElement('div'); bar.className = 'fill'; bar.style.width = (100 * p.score / Math.max(1, top)) + '%';
-      wrap.appendChild(bar);
-      const pts = document.createElement('span'); pts.className = 'pts'; pts.textContent = p.score;
-      row.append(e, wrap, pts); rank.appendChild(row);
+      const pts = document.createElement('span'); pts.className = 'total'; pts.textContent = p.score;
+      row.append(e, document.createElement('span'), pts); rank.appendChild(row);
     }
+    rank.hidden = ps.length < 2;
     const parts = [`${state.bullseyes} bullseye${state.bullseyes === 1 ? '' : 's'}`, `${state.tooEarly} too-early tap${state.tooEarly === 1 ? '' : 's'}`];
     const dead = state.dead + state.unclaimed;
     if (dead) parts.push(`${dead} dead round${dead === 1 ? '' : 's'}`);
     $('endStats').textContent = parts.join(' · ');
-    show('end');
+    show('end', FINAL);
   }
+  function goHome() { state.phase = 'start'; state.round = 0; show('start', HOME); }
 
-  // ───────────── settings & editor ─────────────
+  // ───────────── sheets ─────────────
+  function openSheet(id) { const el = $(id); origin(el, tapX, tapY); el.hidden = false; el.scrollTop = 0; }
+  function closeSheet(id) { $(id).hidden = true; }
+  const anySheet = () => ['rules', 'settings', 'deck'].find(id => !$(id).hidden);
+
   function paintSettings() {
-    $('startAuto').setAttribute('aria-pressed', autoStart ? 'true' : 'false');
-    $('startTap').setAttribute('aria-pressed', autoStart ? 'false' : 'true');
-    $('rule1').textContent = autoStart ? 'A question comes up and the number starts climbing right away. Read fast.'
-                                       : 'Everyone reads the question. One person taps Start and the number starts climbing.';
-    $('unitMetric').setAttribute('aria-pressed', units === 'metric' ? 'true' : 'false');
-    $('unitImperial').setAttribute('aria-pressed', units === 'imperial' ? 'true' : 'false');
-    $('sndOn').setAttribute('aria-pressed', sound.on ? 'true' : 'false');
-    $('sndOff').setAttribute('aria-pressed', sound.on ? 'false' : 'true');
-    const sb = $('soundBtn');
-    sb.setAttribute('aria-pressed', sound.on ? 'true' : 'false');
-    sb.setAttribute('aria-label', sound.on ? 'Sound on' : 'Sound off');
-    $('sndOnIcon').hidden = !sound.on; $('sndOffIcon').hidden = sound.on;
+    const on = (id, v) => { const el = $(id); el.classList.toggle('on', !!v); el.setAttribute('aria-pressed', v ? 'true' : 'false'); };
+    on('startAuto', autoStart); on('startTap', !autoStart);
+    on('unitImperial', units === 'imperial'); on('unitMetric', units === 'metric');
+    on('sndOn', sound.on); on('sndOff', !sound.on);
+    $('rule1b').textContent = autoStart ? 'Read fast.' : 'Read, then start.';
+    $('rule1').textContent = autoStart ? 'A question comes up and the number starts climbing right away.'
+                                       : 'Everyone reads the question. One tap on Start and the number starts climbing.';
+    const n = deckCounts();
+    $('settingsDeckInfo').textContent = `${n.total} questions: ${n.small} small answers, ${n.medium} medium, ${n.big} big. Each game draws ten. ${n.both} of them switch with the units setting.`;
   }
-  function setUnits(u) { units = u; store.set('notyet.units', u); paintSettings(); renderStart(); }
+  function setUnits(u) { units = u; store.set('notyet.units', u); paintSettings(); }
   function setAuto(v) { autoStart = !!v; store.set('notyet.autostart', autoStart); paintSettings(); }
-  function openSettings() { state.phase = 'settings'; renderStart(); paintSettings(); show('settings'); }
-  function openEditor() {
-    $('deckText').value = serializeDeck(deck);
-    $('editStatus').textContent = '';
-    state.phase = 'edit';
-    show('edit');
-  }
+  function openDeck() { $('deckText').value = serializeDeck(deck); $('editStatus').textContent = ''; openSheet('deck'); }
   function saveDeck() {
     const { deck: d, bad } = parseDeck($('deckText').value);
     if (!d.length) { $('editStatus').textContent = 'Nothing usable on those lines. Each needs a question and a number.'; return; }
     deck = d; store.set('notyet.deck', $('deckText').value);
     $('editStatus').textContent = `Saved ${d.length} question${d.length === 1 ? '' : 's'}` + (bad ? `, skipped ${bad} part${bad === 1 ? '' : 's'} without a number` : '') + '.';
-    renderStart();
+    paintSettings();
   }
   function resetDeck() {
     deck = DEFAULT_DECK.map(norm); store.del('notyet.deck');
     $('deckText').value = serializeDeck(deck);
     $('editStatus').textContent = 'Back to the default deck.';
-    renderStart();
+    paintSettings();
   }
+
+  // ───────────── pause / quit ─────────────
+  function pauseGame() {
+    const p = state.phase;
+    if (state.paused || !(p === 'ready' || p === 'counting' || p === 'result' || p === 'newplayer')) return;
+    state.paused = true; state.pausedPhase = p; state.pausedAt = performance.now();
+    if (p === 'counting') { state.running = false; cancelAnimationFrame(state.raf); }   // freeze the clock where it is
+    disarmQuit();
+    $('pauseTitle').textContent = `Round ${state.round} of ${state.total}`;
+    openSheet('pause');
+  }
+  function resumeGame() {
+    if (!state.paused) return;
+    const gap = performance.now() - state.pausedAt;
+    if (state.pausedPhase === 'counting') {
+      state.t0 += gap;                                                         // the count picks up exactly where it stopped
+      state.lockUntil = Math.max(state.lockUntil + gap, performance.now() + 300);
+      state.running = true; state.raf = requestAnimationFrame(loop);
+    }
+    state.paused = false;
+    closeSheet('pause');
+  }
+  function quitGame() {
+    const q = $('quitBtn');
+    if (!q.classList.contains('armed')) {
+      q.classList.add('armed'); q.textContent = 'Sure? Tap again to quit';
+      clearTimeout(state.quitTimer); state.quitTimer = setTimeout(disarmQuit, 2500);
+      return;
+    }
+    disarmQuit();
+    stopCount(); dots.stop(); clearTimeout(state.celeTimer); $('cele').hidden = true; $('late').hidden = true;
+    state.paused = false; closeSheet('pause');
+    state.players = []; renderScores();
+    goHome();
+  }
+  function disarmQuit() { clearTimeout(state.quitTimer); const q = $('quitBtn'); q.classList.remove('armed'); q.textContent = 'Quit game'; }
 
   // ───────────── wiring ─────────────
   function wire() {
@@ -1304,39 +1288,37 @@
     big.addEventListener('contextmenu', (e) => e.preventDefault());
     big.addEventListener('touchstart', () => {}, { passive: true });
 
-    const goHome = () => { state.phase = 'start'; renderStart(); show('start'); };
     $('playBtn').addEventListener('click', newGame);
     $('againBtn').addEventListener('click', newGame);
     $('homeBtn').addEventListener('click', goHome);
-    $('settingsBtn').addEventListener('click', openSettings);
-    $('settingsBack').addEventListener('click', goHome);
+    $('helpBtn').addEventListener('click', () => { paintSettings(); openSheet('rules'); });
+    $('settingsBtn').addEventListener('click', () => { paintSettings(); openSheet('settings'); });
+    document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => closeSheet(b.dataset.close)));
     $('startAuto').addEventListener('click', () => setAuto(true));
     $('startTap').addEventListener('click', () => setAuto(false));
-    $('unitMetric').addEventListener('click', () => setUnits('metric'));
     $('unitImperial').addEventListener('click', () => setUnits('imperial'));
-    $('sndOn').addEventListener('click', () => { sound.set(true); paintSettings(); });
+    $('unitMetric').addEventListener('click', () => setUnits('metric'));
+    $('sndOn').addEventListener('click', () => { sound.set(true); sound.click(); paintSettings(); });
     $('sndOff').addEventListener('click', () => { sound.set(false); paintSettings(); });
-    $('soundBtn').addEventListener('click', () => { sound.set(!sound.on); paintSettings(); });
-    $('editBtn').addEventListener('click', openEditor);
+    $('editBtn').addEventListener('click', openDeck);
     $('saveDeckBtn').addEventListener('click', saveDeck);
     $('resetDeckBtn').addEventListener('click', resetDeck);
-    $('backBtn').addEventListener('click', openSettings);
     $('nextBtn').addEventListener('click', advance);
     $('newNextBtn').addEventListener('click', advance);
     $('giveUp').addEventListener('click', armGiveUp);
-    paintSettings();
-    window.addEventListener('resize', () => { if (state.phase === 'counting') { state.lastLen = 0; fitNum(fmt(state.displayed).length); } });
     $('cele').addEventListener('pointerdown', () => { if (state.phase === 'cele' && performance.now() >= state.celeSkipAt) endCelebration(); });
     $('pauseBtn').addEventListener('click', pauseGame);
     $('resumeBtn').addEventListener('click', resumeGame);
     $('quitBtn').addEventListener('click', quitGame);
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') { if (state.paused) resumeGame(); else pauseGame(); return; }
-      if (state.paused) return;
+      if (e.key === 'Escape') { const s = anySheet(); if (s) closeSheet(s); else if (state.paused) resumeGame(); else pauseGame(); return; }
+      if (state.paused || anySheet()) return;
       if (e.key !== ' ' && e.key !== 'Enter') return;
       if (state.phase === 'cele') { e.preventDefault(); if (performance.now() >= state.celeSkipAt) endCelebration(); return; }
       if (state.phase === 'counting' && document.activeElement !== big) { e.preventDefault(); onBigTap(); }
     });
+    window.addEventListener('resize', () => { if (state.phase === 'counting') { state.lastLen = 0; fitNum(fmt(state.displayed)); } });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { measure(); if (state.phase === 'counting') { state.lastLen = 0; fitNum(fmt(state.displayed)); } }).catch(() => {});
   }
 
   // ───────────── boot (survives live republishes) ─────────────
@@ -1345,7 +1327,7 @@
              pool: state.pool, tooEarly: state.tooEarly, unclaimed: state.unclaimed, dead: state.dead, bullseyes: state.bullseyes };
   }
   function boot(data) {
-    wire(); renderStart();
+    wire(); paintSettings(); measure();
     const d = data || {};
     if (d.v === 1 && Array.isArray(d.questions) && d.questions.length && d.round > 0) {
       Object.assign(state, { total: d.total || d.questions.length, questions: d.questions, players: d.players || [], pool: d.pool && d.pool.length ? d.pool : shuffle(EMOJI),
@@ -1354,7 +1336,7 @@
       if (d.phase === 'end') { state.round = d.round; endGame(); }
       else { state.round = d.round - 1; startRound(); }
     } else {
-      show('start');
+      show('start', HOME, true);
     }
   }
   if (window.claude && window.claude.hot && window.claude.hot.snapshot) window.claude.hot.snapshot(snapshot);
