@@ -7,37 +7,41 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Perfect Timing">
-<meta name="theme-color" content="#fff57d">
+<meta name="theme-color" content="#ddd1b8">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
 <title>Perfect Timing</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" data-face="fraunces" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400..700&family=Fraunces:opsz,wght,SOFT,WONK@9..144,400..900,100,1&display=swap">
+<link rel="stylesheet" data-face="anybody" href="https://fonts.googleapis.com/css2?family=Anybody:wdth,wght@50..150,100..900&family=Martian+Mono:wdth,wght@75..112.5,100..800&display=swap">
 <style>
-/* Layout: every screen is a pair, one ground colour and one type colour, and nothing else. The title is rust on
-   yellow. Each round takes the next pair; the button is a chunky disc in the type colour that stands proud of the
-   table, with the count knocked out of it. A win turns the round's pair inside out, a bullseye is black on orange,
-   a miss is pink on red. Sheets to read are black on mint. The typeface is a setting while we try a few. */
+/* Layout: the game is a piece of apparatus. One big red button in a black housing, on a panel whose enamel changes
+   every round: teal, mustard, sky, brown, avocado, putty. Legends are printed on the panel in the ink that goes with
+   it, keys are caps with an edge, and anything the machine has to tell you is punched onto black label tape. A result
+   comes out as a paper slip with the answer on a counter. A win lights the table green, a bullseye is a red-and-cream
+   target, too late is solid red. Sheets you read are paper. The typeface is a setting while we try a few. */
 :root{
-  --oxblood:#652114; --pink:#ff96d9;   /* a warm pair */
-  --rust:#943821; --yellow:#fff57d;    /* home: the title, and the final scores turned inside out */
-  --peri:#7f9ad1; --mint:#9dffb2;      /* a cool pair, and the sheets you read */
-  --orange:#ff8800; --black:#000000;   /* the bullseye */
-  --red:#ff0000;                       /* too early, too late */
-  --white:#ffffff;                     /* pause */
-  --ground:var(--yellow); --fg:var(--rust);   /* the pair in force; every screen and sheet sets its own */
-  --side:#65261a;                             /* the edge of anything you can press: the type colour, a step darker */
-  /* the typeface in force (the script sets these from FACES): a display face for anything big, a text face for anything read */
-  --display:'Fraunces',Georgia,serif; --wd:900; --dvs:'SOFT' 100,'WONK' 1; --dvsp:'SOFT' 100,'WONK' 1,'opsz' 144;
-  --text:'DM Sans',system-ui,sans-serif; --wt:500; --wts:700;
-  --trk:.4;   /* how much of the display tracking this face wants */
-  --dz:1;     /* a size trim for wide faces */
+  --red:#e1261c; --red-edge:#9b130c; --red-dim:#8c1912;   /* the button: always red */
+  --cream:#fbf3e1;                    /* the legend on the button, the letters on label tape */
+  --paper:#f6efde; --ink:#221c17;     /* the result slip, and the sheets you read */
+  --tape:#1b1714; --collar:#1b1714;   /* label tape; the housing the button sits in */
+  --ground:#ddd1b8; --fg:#221c17;     /* the finish in force: panel colour and legend colour (every screen sets its own) */
+  --side:#5d5751;                     /* the edge of a key: its face colour, a step away */
+  /* type by role (the script sets these from FACES) */
+  --f-head:'Anybody','Arial Black','Helvetica Neue',Arial,sans-serif; --w-head:900; --s-head:150%;    /* nameplates */
+  --f-key:'Anybody','Arial Black','Helvetica Neue',Arial,sans-serif; --w-key:800; --s-key:118%; --t-key:.03em;   /* legends on keys */
+  --f-shout:'Anybody','Arial Black','Helvetica Neue',Arial,sans-serif; --w-shout:900; --s-shout:100%; /* the takeovers */
+  --f-ask:'Anybody','Helvetica Neue',Arial,sans-serif; --w-ask:700; --s-ask:94%;                      /* the question, and anything said out loud */
+  --f-num:'Anybody','Arial Narrow','Helvetica Neue',Arial,sans-serif; --w-num:800; --s-num:68%;       /* the count and every other number */
+  --f-label:'Martian Mono',ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace; --w-label:600; --s-label:100%; --t-label:.1em;   /* label tape, small legends */
+  --f-text:'Martian Mono',ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace; --w-text:400; --s-text:80%;      /* anything read */
+  --z-head:1; --z-key:1; --z-ask:1; --z-label:1; --z-text:1; --z-legend:1;   /* per-face size trims */
+  --dw:.5em; --cw:.22em;              /* digit and comma cells, measured by the script in the face in force */
   --ease:cubic-bezier(.3,0,.15,1);
   --spring:cubic-bezier(.2,1.5,.4,1);
 }
 html{background:var(--ground)}
 html,body{height:100%}
-body{margin:0;background:var(--ground);color:var(--fg);font-family:var(--text);font-weight:var(--wt);overflow:hidden;
+body{margin:0;background:var(--ground);color:var(--fg);font-family:var(--f-text);font-weight:var(--w-text);font-stretch:var(--s-text);overflow:hidden;
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;
   -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
 *{box-sizing:border-box}
@@ -45,173 +49,227 @@ button{font:inherit;color:inherit}
 p{margin:0}
 #stage{position:relative;width:100%;height:100%;overflow:hidden;touch-action:manipulation}
 
-/* ---------- type ---------- */
-.eyebrow{font-size:13px;line-height:1.3;font-weight:var(--wts);letter-spacing:.1em;text-transform:uppercase}
-.line{font-size:17px;line-height:1.45;text-wrap:pretty}
-.dim{opacity:.68}
-.mark{font-size:calc(var(--dz)*clamp(64px,min(26vw,18vh),210px));line-height:.88;letter-spacing:calc(-.035em*var(--trk));margin:0;text-align:center}
-.title2{font-size:calc(var(--dz)*clamp(30px,8.4vmin,48px));line-height:1.04;letter-spacing:calc(-.03em*var(--trk));text-wrap:balance}
-.readout{font-size:96px;line-height:.86;letter-spacing:calc(-.05em*var(--trk));white-space:nowrap}
-.question{font-size:calc(var(--dz)*clamp(28px,8.4vw,46px));line-height:1.06;letter-spacing:calc(-.02em*var(--trk));text-wrap:balance;overflow-wrap:anywhere}
-/* everything set in the display face */
-.mark,.title2,.readout,.question,.pill,.cbtn,.num,.rowb .total,.word,.overlay h2,.opt .t,.steps li::before{font-family:var(--display);font-weight:var(--wd);font-variation-settings:var(--dvs)}
-.mark,.readout,.num,.word,.rowb .total{font-variation-settings:var(--dvsp)}   /* the big ones, pinned to the display cut so they measure the same at any size */
+/* ---------- type, by role ---------- */
+.mark,.overlay h2{font-family:var(--f-head);font-weight:var(--w-head);font-stretch:var(--s-head);text-transform:uppercase;letter-spacing:0}
+.pill,.cbtn,.legend,.num.is-label{font-family:var(--f-key);font-weight:var(--w-key);font-stretch:var(--s-key);letter-spacing:var(--t-key);text-transform:uppercase}
+.word{font-family:var(--f-shout);font-weight:var(--w-shout);font-stretch:var(--s-shout);text-transform:uppercase;letter-spacing:0}
+.question,.title2,.tapline,.opt .t,.steps b{font-family:var(--f-ask);font-weight:var(--w-ask);font-stretch:var(--s-ask)}
+.num,.readout,.rowb .total,.steps li::before{font-family:var(--f-num);font-weight:var(--w-num);font-stretch:var(--s-num);letter-spacing:0}
+.eyebrow,.tape,.chip{font-family:var(--f-label);font-weight:var(--w-label);font-stretch:var(--s-label);letter-spacing:var(--t-label);text-transform:uppercase}
 
-/* ---------- pills: the type colour as a solid key with an edge, or as a flat tint of itself ---------- */
-.pill{font-size:18px;line-height:1;height:52px;padding:0 28px;margin:0 0 5px;border:0;border-radius:999px;flex:0 0 auto;
+.eyebrow{font-size:calc(12px*var(--z-label));line-height:1.45;text-wrap:balance}
+.line{font-size:calc(14.5px*var(--z-text));line-height:1.55;text-wrap:pretty}
+.dim{opacity:.7}
+.mark{font-size:56px;line-height:.95;margin:0;text-align:center}
+.title2{font-size:calc(var(--z-ask)*clamp(26px,7.4vmin,42px));line-height:1.08;text-wrap:balance}
+.question{font-size:calc(var(--z-ask)*clamp(27px,8.2vw,46px));line-height:1.1;text-wrap:balance;overflow-wrap:anywhere}
+
+/* ---------- label tape: what the machine has to say ---------- */
+.tape,.chip{display:inline-flex;align-items:center;flex:0 0 auto;border-radius:3px;background:var(--tape);color:var(--cream);line-height:1;white-space:nowrap;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.22),inset 0 -1px 0 rgba(0,0,0,.5),0 1px 2px rgba(0,0,0,.28)}
+.tape{height:28px;padding:0 calc(10px - var(--t-label)) 0 10px;font-size:calc(12px*var(--z-label))}
+.tape.red{background:var(--red)}
+.tape.lg{height:42px;padding:0 calc(17px - var(--t-label)) 0 17px;border-radius:4px;font-size:calc(15px*var(--z-label))}
+.scores{display:flex;flex-wrap:wrap;gap:6px}
+.chip{gap:7px;height:30px;padding:0 calc(11px - var(--t-label)) 0 7px;font-size:calc(13px*var(--z-label))}
+.chip .e{font-size:16px;line-height:1;letter-spacing:0}
+
+/* ---------- keys: caps in the legend colour, with an edge; or a flat outline for the ones you rarely want ---------- */
+.pill{font-size:calc(16px*var(--z-key));line-height:1;height:52px;padding:0 24px;margin:0 0 5px;border:0;border-radius:12px;flex:0 0 auto;
   background:var(--fg);color:var(--ground);cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
   box-shadow:0 5px 0 var(--side);transition:transform .07s ease,box-shadow .07s ease}
 .pill:active{transform:translateY(4px);box-shadow:0 1px 0 var(--side)}
-.pill.ghost{background:rgba(128,128,128,.3);background:color-mix(in srgb,var(--fg) 20%,transparent);color:var(--fg);box-shadow:none;margin-bottom:0;transition:transform .15s var(--spring)}
-.pill.ghost:active{transform:scale(.95);box-shadow:none}
-.pill.small{height:42px;padding:0 20px;font-size:15px}
-.pill.armed{background:var(--red);color:var(--pink);--side:#a80000}
+.pill.ghost{background:transparent;color:var(--fg);box-shadow:inset 0 0 0 2px var(--fg);margin-bottom:0;transition:transform .15s var(--spring)}
+.pill.ghost:active{transform:scale(.96);box-shadow:inset 0 0 0 2px var(--fg)}
+.pill.small{height:42px;padding:0 18px;border-radius:10px;font-size:calc(13px*var(--z-key))}
+.pill.armed,.pill.ghost.armed{background:var(--red);color:var(--cream);box-shadow:none}
 .pill:focus-visible,.cbtn:focus-visible,.big:focus-visible,.opt:focus-visible,.pbtn:focus-visible{outline:2px solid var(--fg);outline-offset:3px}
 .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 
-/* ---------- corner furniture: tints of whichever type colour is in force ---------- */
-#corner{position:absolute;left:max(20px,env(safe-area-inset-left,0px));top:22px;z-index:5;height:32px;padding:0 14px 0 15px;border-radius:999px;
-  display:flex;align-items:center;background:rgba(128,128,128,.3);background:color-mix(in srgb,var(--fg) 18%,transparent);color:var(--fg);
-  font-size:12px;line-height:1;font-weight:var(--wts);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;pointer-events:none}
+/* ---------- corner furniture: the round on a strip of tape, and the round keys ---------- */
+#corner{position:absolute;left:max(20px,env(safe-area-inset-left,0px));top:24px;z-index:5;pointer-events:none}
 #corner:empty{display:none}
-#ctrl{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:16px;z-index:5;display:flex;gap:8px}
-.cbtn{width:44px;height:44px;padding:0;margin:0;border:0;border-radius:50%;display:grid;place-items:center;cursor:pointer;touch-action:manipulation;
-  background:rgba(128,128,128,.3);background:color-mix(in srgb,var(--fg) 18%,transparent);color:var(--fg);font-size:20px;line-height:1;
-  transition:transform .15s var(--spring);-webkit-tap-highlight-color:transparent}
-.cbtn:active{transform:scale(.92)}
+#ctrl{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:16px;z-index:5;display:flex;gap:10px}
+.cbtn{width:44px;height:44px;padding:0;margin:0 0 4px;border:0;border-radius:50%;display:grid;place-items:center;cursor:pointer;touch-action:manipulation;
+  background:var(--fg);color:var(--ground);font-size:19px;line-height:1;letter-spacing:0;
+  box-shadow:0 4px 0 var(--side);transition:transform .07s ease,box-shadow .07s ease;-webkit-tap-highlight-color:transparent}
+.cbtn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--side)}
 
-/* ---------- screens: each is a full field in its own pair, and arrives as a disc growing from where you tapped ---------- */
+/* ---------- screens: each is a full panel in its own finish, and arrives as a disc growing from where you tapped ---------- */
 .screen{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--ground);color:var(--fg);overflow-y:auto;-webkit-overflow-scrolling:touch;
   padding-block:76px 22px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
-.screen>.col{width:min(560px,100%);margin-inline:auto;display:flex;flex-direction:column;flex:0 0 auto;gap:26px}
+.screen>.col{width:min(560px,100%);margin-inline:auto;display:flex;flex-direction:column;flex:0 0 auto;gap:24px}
 .screen>.col.fill{flex:1 1 auto;min-height:0;gap:14px}
-.screen>.col.center{flex:1 0 auto;justify-content:center;align-items:center;text-align:center;gap:26px;padding-bottom:54px}
+.screen>.col.center{flex:1 0 auto;justify-content:center;align-items:center;text-align:center;gap:24px;padding-bottom:54px}
+#screen-start>.col{gap:clamp(28px,6vh,52px)}
 .wipe{animation:wipe .5s var(--ease) both}
 @keyframes wipe{from{clip-path:circle(0% at var(--ox,50%) var(--oy,50%))}to{clip-path:circle(142% at var(--ox,50%) var(--oy,50%))}}
 @keyframes unwipe{from{clip-path:circle(142% at var(--ox,50%) var(--oy,50%))}to{clip-path:circle(0% at var(--ox,50%) var(--oy,50%))}}
 
-.scores{display:flex;flex-wrap:wrap;gap:6px}
-.chip{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px 0 8px;border-radius:999px;font-size:15px;line-height:1;font-weight:var(--wts);
-  background:rgba(128,128,128,.3);background:color-mix(in srgb,var(--fg) 18%,transparent)}
-.chip .e{font-size:17px;line-height:1}
-
-/* ---------- the round: one big button with an edge and a shadow, that goes down when you hit it ---------- */
-.arena{flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;position:relative;container-type:size;padding-block:10px 6px}
-.big{--d:min(80vw,42vh,400px);
-  --d:max(180px,min(80vw,calc(100cqh - 50px),400px));   /* fill whatever height the question leaves, with room for the edge */
-  width:var(--d);height:var(--d);border-radius:50%;border:0;padding:0;margin:0 0 16px;background:var(--fg);color:var(--ground);display:grid;place-items:center;
-  cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
-  box-shadow:0 16px 0 var(--side),0 34px 30px -12px rgba(0,0,0,.34);
-  transition:transform .07s ease,box-shadow .07s ease,background .12s,color .12s}
-.big.down{transform:translateY(13px);box-shadow:0 3px 0 var(--side),0 10px 12px -8px rgba(0,0,0,.34)}
-.big.early{background:var(--red);color:var(--pink);--side:#a80000;animation:shake .45s linear}
+/* ---------- the button: a red cap standing proud of a black housing, with a bezel of ticks; it goes down when you hit it ---------- */
+.arena{flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;position:relative;container-type:size;padding-block:8px}
+.well{--d:min(72vw,38vh,300px);
+  --c:max(11px,calc(var(--d)*.062));       /* how thick the housing is */
+  --lift:max(9px,calc(var(--d)*.042));     /* how far the cap stands out of it */
+  position:relative;flex:0 0 auto;width:calc(var(--d) + 2*var(--c));height:calc(var(--d) + 2*var(--c));border-radius:50%;background:var(--collar);display:grid;place-items:center;
+  box-shadow:inset 0 3px 0 rgba(0,0,0,.5),0 2px 0 rgba(255,255,255,.18),0 10px 18px -8px rgba(0,0,0,.4)}
+@supports (width:1cqh){.arena .well{--d:max(170px,min(calc(89vw - 36px),calc(88cqh - 16px),400px))}}   /* fill whatever the question leaves, housing included */
+.well.play{--d:min(60vw,34vh,280px)}
+.rig{position:relative;flex:0 0 auto}
+.rig>.tape{position:absolute;right:-4px;bottom:calc(var(--tagy,10%));transform:rotate(-5deg);z-index:2}
+.well::before,.well::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none}
+.well::before{opacity:.4;background:repeating-conic-gradient(from -.5deg,var(--cream) 0 1deg,transparent 1deg 6deg);
+  -webkit-mask:radial-gradient(closest-side,transparent calc(100% - var(--c)*.62),#000 calc(100% - var(--c)*.62 + .5px) calc(100% - var(--c)*.24),transparent calc(100% - var(--c)*.24 + .5px));
+  mask:radial-gradient(closest-side,transparent calc(100% - var(--c)*.62),#000 calc(100% - var(--c)*.62 + .5px) calc(100% - var(--c)*.24),transparent calc(100% - var(--c)*.24 + .5px))}
+.well::after{opacity:.92;background:repeating-conic-gradient(from -1deg,var(--cream) 0 2deg,transparent 2deg 30deg);
+  -webkit-mask:radial-gradient(closest-side,transparent calc(100% - var(--c)*.74),#000 calc(100% - var(--c)*.74 + .5px) calc(100% - var(--c)*.24),transparent calc(100% - var(--c)*.24 + .5px));
+  mask:radial-gradient(closest-side,transparent calc(100% - var(--c)*.74),#000 calc(100% - var(--c)*.74 + .5px) calc(100% - var(--c)*.24),transparent calc(100% - var(--c)*.24 + .5px))}
+.big{position:relative;z-index:1;width:var(--d);height:var(--d);border-radius:50%;border:0;padding:0;margin:0;background:var(--red);color:var(--cream);display:grid;place-items:center;
+  cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transform:translateY(calc(var(--lift)*-1));
+  box-shadow:0 var(--lift) 0 var(--red-edge),0 calc(var(--lift) + 6px) 12px rgba(0,0,0,.55),inset 0 3px 0 rgba(255,255,255,.26),inset 0 -7px 0 rgba(0,0,0,.07);
+  transition:transform .06s ease,box-shadow .06s ease,background .1s}
+.big.down,.big:active{transform:translateY(-2px);box-shadow:0 2px 0 var(--red-edge),0 4px 6px rgba(0,0,0,.55),inset 0 3px 0 rgba(255,255,255,.18),inset 0 -7px 0 rgba(0,0,0,.07)}
+.well.early{animation:shake .45s linear}
+.well.early .big{background:var(--red-dim)}
+.legend{font-size:calc(var(--d)*.19*var(--z-legend));line-height:1}
 .num{display:flex;align-items:baseline;justify-content:center;white-space:nowrap;font-size:40px;line-height:1}
-.num b{font-weight:inherit;display:inline-block;text-align:center}
-.num b.d{width:var(--dw,.6em)}
-.num b.c{width:var(--cw,.26em)}
-.capsule{position:absolute;top:0;left:50%;z-index:2;height:50px;padding:0 24px;border-radius:999px;display:grid;place-items:center;white-space:nowrap;
-  background:var(--red);color:var(--pink);font-size:15px;line-height:1;font-weight:var(--wts);letter-spacing:.1em;text-transform:uppercase;pointer-events:none;
-  transform:translate(-50%,-70%) scale(.7);opacity:0;transition:transform .3s var(--spring),opacity .12s}
-.capsule.show{transform:translate(-50%,0) scale(1);opacity:1}
+.num.is-label{font-size:calc(var(--d)*.15*var(--z-legend))}
+.num b,.readout b{font-weight:inherit;display:inline-block;text-align:center}
+.num b.d{width:var(--dw)}
+.num b.c{width:var(--cw)}
+#early{position:absolute;top:0;left:50%;z-index:2;pointer-events:none;
+  transform:translate(-50%,-70%) rotate(-3deg) scale(.6);opacity:0;transition:transform .28s var(--spring),opacity .1s}
+#early.show{transform:translate(-50%,0) rotate(-3deg) scale(1);opacity:1}
 #giveUp{align-self:center}
 @keyframes shake{10%,90%{transform:translate(-2px,1px)}20%,80%{transform:translate(4px,-2px)}30%,50%,70%{transform:translate(-7px,3px)}40%,60%{transform:translate(7px,-3px)}}
 
-/* ---------- the review: the round's pair turned inside out ---------- */
+/* ---------- the review: the machine prints a slip. The answer on a counter, then where you tapped, then the note ---------- */
 .block{display:flex;flex-direction:column;gap:12px}
-.answer{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-top:2px}
-.tapline{font-size:22px;line-height:1.2}
-.who{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
-.pbtn{width:76px;height:76px;padding:0;margin:0 0 5px;border:0;border-radius:50%;display:grid;place-items:center;font-size:40px;line-height:1;cursor:pointer;touch-action:manipulation;
+.slip{--ground:var(--paper);--fg:var(--ink);position:relative;display:flex;flex-direction:column;gap:12px;padding:30px 18px 18px;margin:8px 0 6px;
+  background:var(--paper);color:var(--ink);border-radius:4px 4px 0 0;filter:drop-shadow(0 9px 9px rgba(0,0,0,.26));animation:feed .5s .1s var(--ease) both}
+.slip::after{content:"";position:absolute;left:0;right:0;top:100%;height:7px;     /* the torn edge */
+  background:linear-gradient(135deg,var(--paper) 50%,transparent 50.5%) 0 0/12px 7px repeat-x,linear-gradient(225deg,var(--paper) 50%,transparent 50.5%) 0 0/12px 7px repeat-x}
+.slip>.tape{position:absolute;top:-10px;left:14px;transform:rotate(-2deg)}
+@keyframes feed{from{transform:translateY(26px);opacity:0}}
+.answer{display:flex;flex-direction:column;align-items:flex-start;gap:9px}
+.readout{display:flex;align-items:baseline;gap:.055em;white-space:nowrap;font-size:96px;line-height:1}
+.readout b.d{width:calc(var(--dw) + .2em);padding:.1em 0 .07em;border-radius:.09em;background:var(--fg);color:var(--ground)}
+.readout b.c{width:var(--cw);margin-inline:-.03em}
+.readout.long{gap:.028em}
+.readout.long b.d{width:calc(var(--dw) + .07em)}
+.readout.long b.c{margin-inline:-.04em}
+.tapline{font-size:calc(21px*var(--z-ask));line-height:1.2}
+#resVerdict{font-size:calc(18px*var(--z-ask))}
+.note{font-size:calc(14.5px*var(--z-text));line-height:1.55;text-wrap:pretty}
+.who{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.who .pill{padding:0 18px}
+.pbtn{width:64px;height:64px;padding:0;margin:0 0 5px;border:0;border-radius:50%;display:grid;place-items:center;font-size:34px;line-height:1;cursor:pointer;touch-action:manipulation;
   background:var(--fg);box-shadow:0 5px 0 var(--side);transition:transform .07s ease,box-shadow .07s ease;-webkit-tap-highlight-color:transparent}
 .pbtn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--side)}
-.notecard{display:flex;align-items:center;gap:16px;padding:16px 22px 16px 18px;border-radius:30px;background:rgba(128,128,128,.3);background:color-mix(in srgb,var(--fg) 16%,transparent)}
-.notecard .e{font-size:54px;line-height:1}
+.notecard{display:flex;align-items:center;gap:14px;padding:14px 18px 14px 14px;border-radius:12px;background:rgba(128,128,128,.25);background:color-mix(in srgb,var(--fg) 13%,transparent)}
+.notecard .e{font-size:50px;line-height:1}
 .screen>.col>.pill{align-self:flex-start}
 .screen>.col.center>.pill{align-self:center}
 .hero{font-size:clamp(110px,36vmin,180px);line-height:1}
 
 /* ---------- final scores ---------- */
+#screen-end>.col{margin-block:auto}
+#endStats{display:flex;flex-direction:column;gap:5px}
 .champ{font-size:clamp(84px,28vmin,170px);line-height:1}
 .board{width:100%;display:flex;flex-direction:column}
 .rowb{display:grid;grid-template-columns:auto 1fr auto;align-items:center;column-gap:14px;padding:8px 2px;
-  border-top:1px solid rgba(128,128,128,.4);border-top:1px solid color-mix(in srgb,currentColor 24%,transparent)}
-.rowb:last-child{border-bottom:1px solid rgba(128,128,128,.4);border-bottom:1px solid color-mix(in srgb,currentColor 24%,transparent)}
+  border-top:1px solid rgba(128,128,128,.4);border-top:1px solid color-mix(in srgb,currentColor 28%,transparent)}
+.rowb:last-child{border-bottom:1px solid rgba(128,128,128,.4);border-bottom:1px solid color-mix(in srgb,currentColor 28%,transparent)}
 .rowb .e{font-size:34px;line-height:1}
-.rowb .total{font-size:clamp(34px,10vmin,64px);line-height:.95;letter-spacing:calc(-.06em*var(--trk));text-align:right;min-width:1.2em}
+.rowb .total{font-size:clamp(36px,10.5vmin,64px);line-height:1;text-align:right;min-width:1.2em}
 
-/* ---------- takeovers: a disc of colour that grows from the button to fill the table ---------- */
+/* ---------- takeovers: a lamp the size of the table, growing from the button ---------- */
 .takeover{position:absolute;inset:0;z-index:30;display:grid;place-items:center;overflow:hidden;background:var(--ground);color:var(--fg);cursor:pointer;
   padding:env(safe-area-inset-top,0px) max(20px,env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(20px,env(safe-area-inset-left,0px));
   animation:wipe .45s var(--ease) both}
 .takeover.out{animation:unwipe .42s var(--ease) both;pointer-events:none}
 .takeover canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-.tk{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px;width:min(600px,100%)}
-.word{font-size:72px;line-height:.92;letter-spacing:calc(-.045em*var(--trk));text-wrap:balance;animation:enter .5s .12s var(--spring) both}
-.tk .answer{justify-content:center;animation:enter .5s .22s var(--spring) both}
-.tag{height:46px;padding:0 22px;border-radius:999px;background:var(--fg);color:var(--ground);display:grid;place-items:center;
-  font-size:14px;line-height:1;font-weight:var(--wts);letter-spacing:.1em;text-transform:uppercase;animation:enter .5s .3s var(--spring) both,nudge 1.1s .85s ease-in-out infinite}
+#late{--ground:var(--red);--fg:var(--cream)}
+.tk{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;gap:18px;width:min(600px,100%)}
+.word{font-size:72px;line-height:.94;text-wrap:balance;animation:enter .5s .12s var(--spring) both}
+.tk .answer{align-items:center;animation:enter .5s .22s var(--spring) both}
+#celeChip{animation:enter .5s .3s var(--spring) both,nudge 1.1s .85s ease-in-out infinite}
 .ring{display:none}
 #cele.bull .word{animation:slam .6s .1s var(--spring) both}
 #cele.bull .tk{animation:shake .5s .34s linear}
 #cele.bull .ring{display:block;position:absolute;left:50%;top:50%;width:44vmin;height:44vmin;margin:-22vmin 0 0 -22vmin;border-radius:50%;
-  box-shadow:inset 0 0 0 3px var(--fg);pointer-events:none;animation:ringout 1.15s var(--ease) both}
+  box-shadow:inset 0 0 0 9px var(--fg);pointer-events:none;animation:ringout 1.15s var(--ease) both}
 #cele.bull .ring.r2{animation-delay:.2s}
 #cele.bull .ring.r3{animation-delay:.4s}
 #late .word{animation:slam .5s var(--spring) both}
 @keyframes enter{from{transform:scale(.55);opacity:0}}
 @keyframes slam{from{transform:scale(3.2);opacity:0}}
-@keyframes nudge{0%,100%{transform:rotate(-2.2deg)}50%{transform:rotate(2.2deg)}}
-@keyframes ringout{from{transform:scale(.2);opacity:.9}to{transform:scale(3.6);opacity:0}}
+@keyframes nudge{0%,100%{transform:rotate(-2.5deg)}50%{transform:rotate(2.5deg)}}
+@keyframes ringout{from{transform:scale(.2);opacity:.85}to{transform:scale(3.6);opacity:0}}
 
-/* ---------- sheets to read: rules, settings and the deck in black on mint; pause in oxblood on white ---------- */
-.overlay{--ground:var(--mint);--fg:var(--black);--side:#3c3c3c;position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;
+/* ---------- sheets to read: rules, settings and the deck on paper; pause with the lights off ---------- */
+.overlay{--ground:var(--paper);--fg:var(--ink);--side:#5d5751;position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;
   background:var(--ground);color:var(--fg);overflow-y:auto;-webkit-overflow-scrolling:touch;
   padding-block:min(84px,14vh) 40px;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px));
   animation:wipe .45s var(--ease) both}
-#pause{--ground:var(--white);--fg:var(--oxblood);--side:#3d130b;z-index:24}
+#pause{--ground:var(--ink);--fg:var(--paper);--side:#aca697;z-index:24}
 #deck{z-index:22}
 .overlay>.col{margin:0 auto;width:min(480px,100%);display:flex;flex-direction:column;gap:28px;text-align:left;flex:0 0 auto}
 .overlay>.col.center{margin:auto;align-items:center;text-align:center}
 .overlay .x{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:16px}
-.overlay h2{margin:0;font-size:calc(var(--dz)*clamp(44px,12vmin,76px));line-height:1;letter-spacing:calc(-.04em*var(--trk));text-align:center;text-wrap:balance}
-.overlay>.col>.pill{align-self:center}
-.stack{display:flex;flex-direction:column;gap:12px;width:min(280px,100%)}
+.overlay h2{margin:0;font-size:calc(var(--z-head)*clamp(24px,7vw,40px));line-height:1;text-wrap:balance}
+.overlay>.col>.pill{align-self:flex-start}
+.overlay>.col.center>.pill{align-self:center}
+.stack{display:flex;flex-direction:column;gap:14px;width:min(280px,100%)}
 .stack .pill{width:100%}
 .group{display:flex;flex-direction:column;gap:10px}
 .group>.pill{align-self:flex-start}
-.hint{font-size:15px;line-height:1.5;opacity:.68;text-wrap:pretty}
-.hint code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+.hint{font-size:calc(13.5px*var(--z-text));line-height:1.55;opacity:.76;text-wrap:pretty}
+.hint code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;font-stretch:normal}
 
 .opts{display:flex;flex-direction:column}
 .opt{width:100%;display:grid;grid-template-columns:1fr auto;column-gap:18px;align-items:center;text-align:left;cursor:pointer;touch-action:manipulation;
-  background:transparent;color:var(--fg);border:0;border-radius:0;margin:0;padding:15px 0;-webkit-tap-highlight-color:transparent;
-  border-top:1px solid rgba(128,128,128,.4);border-top:1px solid color-mix(in srgb,currentColor 24%,transparent)}
-.opt:last-child{border-bottom:1px solid rgba(128,128,128,.4);border-bottom:1px solid color-mix(in srgb,currentColor 24%,transparent)}
+  background:transparent;color:var(--fg);border:0;border-radius:0;margin:0;padding:14px 0;-webkit-tap-highlight-color:transparent;
+  border-top:1px solid rgba(128,128,128,.4);border-top:1px solid color-mix(in srgb,currentColor 28%,transparent)}
+.opt:last-child{border-bottom:1px solid rgba(128,128,128,.4);border-bottom:1px solid color-mix(in srgb,currentColor 28%,transparent)}
 .opt:active{opacity:.55}
-.opt .t{grid-column:1;font-size:22px;line-height:1.2;letter-spacing:calc(-.01em*var(--trk))}
-.opt .d{grid-column:1;font-size:15px;line-height:1.45;opacity:.68;margin-top:4px}
-.opt::after{content:"";grid-column:2;grid-row:1/span 2;width:24px;height:24px;border-radius:50%;box-shadow:inset 0 0 0 1.5px currentColor;opacity:.4}
-.opt.on::after{opacity:1;background:var(--ground);box-shadow:inset 0 0 0 7.5px var(--fg)}
+.opt .t{grid-column:1;font-size:calc(20px*var(--z-ask));line-height:1.2}
+.opt .d{grid-column:1;font-size:calc(13.5px*var(--z-text));line-height:1.5;opacity:.76;margin-top:4px}
+/* each choice has a lamp: lit red when it's the one in force */
+.opt::after{content:"";grid-column:2;grid-row:1/span 2;width:22px;height:22px;border-radius:50%;background:rgba(128,128,128,.3);background:color-mix(in srgb,var(--fg) 16%,transparent);box-shadow:inset 0 2px 0 rgba(0,0,0,.22)}
+.opt.on::after{background:var(--red);box-shadow:inset 0 2px 0 rgba(255,255,255,.4),0 0 0 4px rgba(225,38,28,.22)}
 
 .steps{margin:0;padding:0;list-style:none;counter-reset:s;display:flex;flex-direction:column}
-.steps li{counter-increment:s;display:grid;grid-template-columns:36px 1fr;align-items:baseline;padding:13px 0;font-size:17px;line-height:1.45;
-  border-top:1px solid rgba(128,128,128,.4);border-top:1px solid color-mix(in srgb,currentColor 24%,transparent)}
-.steps li:last-child{border-bottom:1px solid rgba(128,128,128,.4);border-bottom:1px solid color-mix(in srgb,currentColor 24%,transparent)}
-.steps li::before{content:counter(s);font-size:22px;line-height:1;grid-row:1/span 2}
-.steps b{grid-column:2;font-weight:var(--wts)}
-.steps span{grid-column:2;opacity:.68}
+.steps li{counter-increment:s;display:grid;grid-template-columns:34px 1fr;align-items:baseline;padding:12px 0;
+  border-top:1px solid rgba(128,128,128,.4);border-top:1px solid color-mix(in srgb,currentColor 28%,transparent)}
+.steps li:last-child{border-bottom:1px solid rgba(128,128,128,.4);border-bottom:1px solid color-mix(in srgb,currentColor 28%,transparent)}
+.steps li::before{content:counter(s);font-size:28px;line-height:1;grid-row:1/span 2}
+.steps b{grid-column:2;font-size:calc(17px*var(--z-ask));line-height:1.25}
+.steps span{grid-column:2;font-size:calc(13.5px*var(--z-text));line-height:1.55;opacity:.8;margin-top:3px}
 
-textarea{width:100%;min-height:44vh;resize:vertical;border:0;border-radius:18px;padding:14px 16px;-webkit-user-select:text;user-select:text;
-  background:rgba(128,128,128,.2);background:color-mix(in srgb,var(--fg) 10%,transparent);color:var(--fg);
+textarea{width:100%;min-height:44vh;resize:vertical;border:0;border-radius:8px;padding:14px 16px;-webkit-user-select:text;user-select:text;
+  background:#fffaf0;color:var(--fg);box-shadow:inset 0 0 0 2px var(--fg);
   font:400 12.5px/1.55 ui-monospace,Menlo,Consolas,monospace}
-textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+textarea:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+
+/* a phone on its side: the question sits beside the button rather than above it */
+@media (orientation:landscape) and (max-height:540px){
+  .screen{padding-block:68px 14px}
+  #screen-start>.col.center{flex-direction:row;gap:clamp(28px,6vw,64px);padding-bottom:0}
+  .well.play{--d:min(30vw,50vh,280px)}
+  #screen-round>.col.fill{display:grid;grid-template-columns:minmax(0,1fr) min(46%,calc(100vh - 92px));grid-template-rows:auto 1fr auto;column-gap:28px;row-gap:10px;width:min(980px,100%)}
+  #screen-round .scores{grid-column:1;grid-row:1}
+  #screen-round .question{grid-column:1;grid-row:2;align-self:center;font-size:calc(var(--z-ask)*clamp(22px,8vh,38px))}
+  #screen-round .arena{grid-column:2;grid-row:1/-1;padding-block:0}
+  #screen-round #giveUp{grid-column:1;grid-row:3;justify-self:start}
+}
 
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 <div id="stage">
-  <div id="corner"></div>
+  <div class="tape" id="corner"></div>
   <div id="ctrl">
     <button class="cbtn" id="pauseBtn" type="button" aria-label="Pause" hidden><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><rect x="6.2" y="5" width="3.6" height="14" rx="1"/><rect x="14.2" y="5" width="3.6" height="14" rx="1"/></svg></button>
     <button class="cbtn" id="settingsBtn" type="button" aria-label="Settings"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 8h8.5M19.5 8h.5M4 16h.5M11.5 16H20" fill="none"/><circle cx="16" cy="8" r="2.6" fill="none"/><circle cx="8" cy="16" r="2.6" fill="none"/></svg></button>
@@ -222,7 +280,7 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
   <section class="screen" id="screen-start">
     <div class="col center">
       <h1 class="mark">Perfect<br>Timing</h1>
-      <button class="pill" id="playBtn" type="button">Play</button>
+      <div class="rig"><div class="well play"><button class="big" id="playBtn" type="button"><span class="legend">Play</span></button></div><div class="tape" aria-hidden="true">Button</div></div>
     </div>
   </section>
 
@@ -232,8 +290,8 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
       <div class="scores" hidden></div>
       <p class="question" id="qText"></p>
       <div class="arena">
-        <div class="capsule" id="early" aria-live="assertive">Too early</div>
-        <button class="big" id="bigBtn" type="button" aria-label="Tap when the number reaches the answer"><span class="num is-label" id="num">Start</span></button>
+        <div class="tape lg red" id="early" aria-live="assertive">Too early</div>
+        <div class="well" id="well"><button class="big" id="bigBtn" type="button" aria-label="Tap when the number reaches the answer"><span class="num is-label" id="num">Start</span></button></div>
       </div>
       <button class="pill ghost small" id="giveUp" type="button" hidden>Everyone missed</button>
     </div>
@@ -243,12 +301,12 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
   <section class="screen" id="screen-result" hidden>
     <div class="col">
       <div class="scores" hidden></div>
-      <div class="block">
-        <div class="eyebrow" id="resEyebrow">Correct</div>
+      <div class="slip" id="slip">
+        <div class="tape" id="resEyebrow">Correct</div>
         <div class="answer"><span class="readout" id="resAnswerNum">21</span><span class="eyebrow" id="resAnswerUnit">seconds</span></div>
-        <p class="line tapline" id="resTapped">Tapped at <span id="resTappedNum">23</span></p>
-        <p class="line tapline" id="resVerdict" hidden></p>
-        <p class="line" id="resNote"></p>
+        <p class="tapline" id="resTapped">Tapped at <span id="resTappedNum">23</span></p>
+        <p class="tapline" id="resVerdict" hidden></p>
+        <p class="note" id="resNote"></p>
       </div>
       <div class="block" id="whoBlock">
         <div class="eyebrow" id="whoLabel">Who got it?</div>
@@ -265,7 +323,7 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
   <!-- NEW PLAYER -->
   <section class="screen" id="screen-newplayer" hidden>
     <div class="col center">
-      <div class="eyebrow">New player</div>
+      <div class="tape">New player</div>
       <div class="hero" id="newEmoji">🐸</div>
       <div class="title2">You're this now.</div>
       <p class="line dim" style="max-width:26ch">Point's on the board. Next time you win a round, tap your own face.</p>
@@ -276,7 +334,7 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
   <!-- FINAL -->
   <section class="screen" id="screen-end" hidden>
     <div class="col" style="align-items:center;text-align:center">
-      <div class="eyebrow" id="endEyebrow">Winner</div>
+      <div class="tape red" id="endEyebrow">Winner</div>
       <div class="champ" id="endHero">🦊</div>
       <div class="title2" id="endLine"></div>
       <div class="board" id="rank"></div>
@@ -296,11 +354,11 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
       <div class="eyebrow" id="celeEyebrow">Round 1 of 10</div>
       <div class="word" id="celeTitle">You got it!</div>
       <div class="answer"><span class="readout" id="celeNum">23</span><span class="eyebrow" id="celeUnit">seconds</span></div>
-      <div class="tag" id="celeChip" hidden>Double points</div>
+      <div class="tape lg" id="celeChip" hidden>Double points</div>
       <div class="eyebrow dim" id="celeSub"></div>
     </div>
   </div>
-  <div class="takeover" id="late" style="--ground:var(--red);--fg:var(--pink)" hidden>
+  <div class="takeover" id="late" hidden>
     <div class="tk"><div class="word">Too late</div></div>
   </div>
 
@@ -721,13 +779,14 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
 
   const EMOJI = ['🦊','🐸','🐙','🦄','🐢','🦩','🐝','🦕','🍄','🌵','🎃','👻','🤖','👽','🐧','🦔','🥑','🍕','🌈','🦋','🐳','🦀','🍩','🚀'];
 
-  // ───────────── colour: every screen is a pair, [ground, type] ─────────────
-  const C = { oxblood: '#652114', pink: '#ff96d9', rust: '#943821', yellow: '#fff57d', peri: '#7f9ad1', mint: '#9dffb2', orange: '#ff8800', black: '#000000', red: '#ff0000', white: '#ffffff' };
-  const HOME = [C.yellow, C.rust];
-  const FINAL = [C.rust, C.yellow];
-  const BULL = [C.orange, C.black];
-  const ROUND_PAIRS = [[C.pink, C.oxblood], [C.mint, C.black], [C.peri, C.black], [C.oxblood, C.pink], [C.yellow, C.rust]];
-  const flip = (p) => [p[1], p[0]];
+  // ───────────── colour: every screen is a finish, [panel, legend]. The button is red on all of them. ─────────────
+  const C = { red: '#e1261c', cream: '#fbf3e1', paper: '#f6efde', ink: '#221c17', putty: '#ddd1b8', mustard: '#e0a526', umber: '#2a1d08', teal: '#1c6a6c',
+              sky: '#a9c5cf', navy: '#14273a', brown: '#5b3a29', avocado: '#9cab5c', olive: '#1f2410', green: '#2c7a4b' };
+  const HOME = [C.putty, C.ink];
+  const FINAL = [C.umber, C.mustard];
+  const WIN = [C.green, C.cream];      // the table lights green
+  const BULL = [C.cream, C.red];       // a target
+  const ROUND_PAIRS = [[C.teal, C.cream], [C.mustard, C.umber], [C.sky, C.navy], [C.brown, C.cream], [C.avocado, C.olive], [C.putty, C.ink]];
 
   // ───────────── helpers ─────────────
   const $ = (id) => document.getElementById(id);
@@ -854,7 +913,7 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
   document.addEventListener('pointerdown', (e) => { tapX = e.clientX; tapY = e.clientY; }, true);
 
   function setPair(p) {
-    root.style.setProperty('--ground', p[0]); root.style.setProperty('--fg', p[1]);
+    root.style.setProperty('--ground', p[0]); root.style.setProperty('--fg', p[1]); root.style.setProperty('--side', sideOf(p[1]));
     const tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.setAttribute('content', p[0]);
   }
   function origin(el, x, y) {
@@ -908,22 +967,56 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
   }
 
   // ───────────── typefaces: a setting while we try a few ─────────────
-  const SANS = "'DM Sans',system-ui,-apple-system,'Helvetica Neue',sans-serif";
+  // Type is set by role: nameplates (head), key legends (key), the takeovers (shout), the question (ask),
+  // every number (num), label tape (label) and anything read (text). A face fills the roles in.
+  const SQ = "'Arial Black','Helvetica Neue',Arial,sans-serif", SANS = "'Helvetica Neue',Arial,sans-serif", NARROW = "'Arial Narrow','Helvetica Neue',Arial,sans-serif";
+  const MONO = "ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace";
+  const GF = 'https://fonts.googleapis.com/css2?family=';
+  const BASE = { 's-head': '100%', 's-key': '100%', 's-shout': '100%', 's-ask': '100%', 's-num': '100%', 's-label': '100%', 's-text': '100%',
+                 't-key': '.04em', 't-label': '.1em', 'z-head': 1, 'z-key': 1, 'z-ask': 1, 'z-label': 1, 'z-text': 1, 'z-legend': 1 };
   const FACES = {
-    fraunces:  { name: 'Fraunces', note: 'A soft, wonky serif. Seventies game show.', display: "'Fraunces',Georgia,serif", wd: 900,
-                 dvs: "'SOFT' 100,'WONK' 1", dvsp: "'SOFT' 100,'WONK' 1,'opsz' 144", text: SANS, wt: 500, wts: 700, trk: 0.4, dz: 1, probe: "900 40px 'Fraunces'",
-                 url: 'https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400..700&family=Fraunces:opsz,wght,SOFT,WONK@9..144,400..900,100,1&display=swap' },
-    fredoka:   { name: 'Fredoka', note: 'Round and soft, the face Tap App uses.', display: "'Fredoka','Arial Rounded MT Bold',system-ui,sans-serif", wd: 600,
-                 dvs: 'normal', dvsp: 'normal', text: "'Fredoka','Arial Rounded MT Bold',system-ui,sans-serif", wt: 500, wts: 600, trk: 0.5, dz: 1, probe: "600 40px 'Fredoka'",
-                 url: 'https://fonts.googleapis.com/css2?family=Fredoka:wght@400..700&display=swap' },
-    bricolage: { name: 'Bricolage Grotesque', note: 'A heavy grotesque with a few quirks.', display: "'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif", wd: 800,
-                 dvs: 'normal', dvsp: "'opsz' 96", text: "'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif", wt: 500, wts: 700, trk: 0.55, dz: 1, probe: "800 40px 'Bricolage Grotesque'",
-                 url: 'https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap' },
-    bowlby:    { name: 'Bowlby One', note: 'Fat poster type. Loud.', display: "'Bowlby One',Impact,'Arial Black',sans-serif", wd: 400,
-                 dvs: 'normal', dvsp: 'normal', text: SANS, wt: 500, wts: 700, trk: 0, dz: 0.8, probe: "400 40px 'Bowlby One'",
-                 url: 'https://fonts.googleapis.com/css2?family=Bowlby+One&family=DM+Sans:opsz,wght@9..40,400..700&display=swap' }
+    anybody: { name: 'Anybody', note: 'Wide and square-shouldered, like the lettering on a hi-fi. Labels in Martian Mono.',
+      url: GF + 'Anybody:wdth,wght@50..150,100..900&family=Martian+Mono:wdth,wght@75..112.5,100..800&display=swap',
+      probe: ["900 40px 'Anybody'", "600 12px 'Martian Mono'"],
+      v: { 'f-head': "'Anybody'," + SQ, 'w-head': 900, 's-head': '150%',
+           'f-key': "'Anybody'," + SQ, 'w-key': 800, 's-key': '118%', 't-key': '.03em',
+           'f-shout': "'Anybody'," + SQ, 'w-shout': 900, 's-shout': '100%',
+           'f-ask': "'Anybody'," + SANS, 'w-ask': 700, 's-ask': '94%',
+           'f-num': "'Anybody'," + NARROW, 'w-num': 800, 's-num': '68%',
+           'f-label': "'Martian Mono'," + MONO, 'w-label': 600,
+           'f-text': "'Martian Mono'," + MONO, 'w-text': 400, 's-text': '80%' } },
+    barlow: { name: 'Barlow', note: 'Plain and condensed, like a number plate. Labels in IBM Plex Mono.',
+      url: GF + 'Barlow:wght@500;600;700&family=Barlow+Condensed:wght@700;800&family=IBM+Plex+Mono:wght@400;600&display=swap',
+      probe: ["800 40px 'Barlow Condensed'", "700 20px 'Barlow'", "600 12px 'IBM Plex Mono'"],
+      v: { 'f-head': "'Barlow Condensed'," + NARROW, 'w-head': 800, 'z-head': 1.6,
+           'f-key': "'Barlow Condensed'," + NARROW, 'w-key': 700, 't-key': '.08em', 'z-key': 1.25,
+           'f-shout': "'Barlow Condensed'," + NARROW, 'w-shout': 800,
+           'f-ask': "'Barlow'," + SANS, 'w-ask': 700, 'z-ask': 1.06,
+           'f-num': "'Barlow Condensed'," + NARROW, 'w-num': 800,
+           'f-label': "'IBM Plex Mono'," + MONO, 'w-label': 600, 'z-label': 1.04,
+           'f-text': "'Barlow'," + SANS, 'w-text': 500, 'z-text': 1.12, 'z-legend': 1.55 } },
+    plex: { name: 'IBM Plex', note: 'The mainframe manual: a condensed sans, with everything else typed.',
+      url: GF + 'IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Sans+Condensed:wght@700&display=swap',
+      probe: ["700 40px 'IBM Plex Sans Condensed'", "600 20px 'IBM Plex Sans'", "600 12px 'IBM Plex Mono'"],
+      v: { 'f-head': "'IBM Plex Sans Condensed'," + NARROW, 'w-head': 700, 'z-head': 1.5,
+           'f-key': "'IBM Plex Mono'," + MONO, 'w-key': 600, 't-key': '.06em', 'z-key': 0.95,
+           'f-shout': "'IBM Plex Sans Condensed'," + NARROW, 'w-shout': 700,
+           'f-ask': "'IBM Plex Sans'," + SANS, 'w-ask': 600, 'z-ask': 1.02,
+           'f-num': "'IBM Plex Sans Condensed'," + NARROW, 'w-num': 700,
+           'f-label': "'IBM Plex Mono'," + MONO, 'w-label': 600, 'z-label': 1.04,
+           'f-text': "'IBM Plex Mono'," + MONO, 'w-text': 400, 'z-text': 0.97, 'z-legend': 1.1 } },
+    micro: { name: 'Michroma + Saira', note: 'Thin and wide on the nameplates, squared-off numbers. The seventies calculator.',
+      url: GF + 'Michroma&family=Saira:wdth,wght@50..125,100..900&display=swap',
+      probe: ["400 40px 'Michroma'", "800 40px 'Saira'"],
+      v: { 'f-head': "'Michroma'," + SQ, 'w-head': 400, 'z-head': 0.92,
+           'f-key': "'Michroma'," + SQ, 'w-key': 400, 't-key': '.06em', 'z-key': 0.8,
+           'f-shout': "'Saira'," + SQ, 'w-shout': 800,
+           'f-ask': "'Saira'," + SANS, 'w-ask': 700, 'z-ask': 1.04,
+           'f-num': "'Saira'," + NARROW, 'w-num': 800, 's-num': '72%',
+           'f-label': "'Michroma'," + SQ, 'w-label': 400, 't-label': '.12em', 'z-label': 0.86,
+           'f-text': "'Saira'," + SANS, 'w-text': 500, 'z-text': 1.1, 'z-legend': 0.8 } }
   };
-  const DEFAULT_FACE = 'fraunces';
+  const DEFAULT_FACE = 'anybody';
   let face = DEFAULT_FACE;
   function loadFace(id) {
     if (document.querySelector('link[data-face="' + id + '"]')) return;
@@ -932,19 +1025,17 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
   }
   function applyFace(id, save) {
     if (!FACES[id]) id = DEFAULT_FACE;
-    face = id; const f = FACES[id];
+    face = id; const f = FACES[id], v = Object.assign({}, BASE, f.v);
     loadFace(id);
-    const s = root.style;
-    s.setProperty('--display', f.display); s.setProperty('--wd', f.wd); s.setProperty('--dvs', f.dvs); s.setProperty('--dvsp', f.dvsp);
-    s.setProperty('--text', f.text); s.setProperty('--wt', f.wt); s.setProperty('--wts', f.wts); s.setProperty('--trk', f.trk); s.setProperty('--dz', f.dz);
+    for (const k in v) root.style.setProperty('--' + k, v[k]);
     if (save) store.set('notyet.face', id);
     refit();
-    try { if (document.fonts && document.fonts.load) document.fonts.load(f.probe).then(refit).catch(() => {}); } catch (e) { /* fine */ }
+    try { if (document.fonts && document.fonts.load) Promise.all(f.probe.map(p => document.fonts.load(p))).then(refit).catch(() => {}); } catch (e) { /* fine */ }
   }
 
   // ───────────── type fitting ─────────────
   // Everything big is measured in the real face (a hidden probe set the same way as the element), so any typeface fits.
-  let probe = null;
+  let probe = null, numRef = null;
   function emWidth(ref, s) {
     try {
       if (!probe) {
@@ -953,23 +1044,24 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
         document.body.appendChild(probe);
       }
       const cs = getComputedStyle(ref);
-      probe.style.fontFamily = cs.fontFamily; probe.style.fontWeight = cs.fontWeight; probe.style.fontVariationSettings = cs.fontVariationSettings;
+      probe.style.fontFamily = cs.fontFamily; probe.style.fontWeight = cs.fontWeight; probe.style.fontStretch = cs.fontStretch;
+      probe.style.fontVariationSettings = cs.fontVariationSettings; probe.style.textTransform = cs.textTransform;
       probe.textContent = s;
       const w = probe.getBoundingClientRect().width / 200;
       return w > 0 ? w : s.length * 0.6;
     } catch (e) { return s.length * 0.6; }
   }
-  // Digits are set in fixed-width cells so a racing count doesn't shimmer.
-  const M = { dw: 0.6, cw: 0.26 };
+  // Digits are set in fixed-width cells so a racing count doesn't shimmer. Measured on a stand-in that is always in the number face.
+  const M = { dw: 0.5, cw: 0.22 };
   function measure() {
-    const n = $('num');
-    let w = 0; for (const d of '0123456789') w = Math.max(w, emWidth(n, d));
-    if (w > 0.3 && w < 1.1) { M.dw = w * 0.97; M.cw = Math.max(0.16, emWidth(n, ',')); }
-    n.style.setProperty('--dw', M.dw + 'em'); n.style.setProperty('--cw', M.cw + 'em');
+    if (!numRef) { numRef = document.createElement('span'); numRef.className = 'num'; numRef.hidden = true; document.body.appendChild(numRef); }
+    let w = 0; for (const d of '0123456789') w = Math.max(w, emWidth(numRef, d));
+    if (w > 0.25 && w < 1.1) { M.dw = w * 0.98; M.cw = Math.max(0.14, emWidth(numRef, ',')); }
+    root.style.setProperty('--dw', M.dw + 'em'); root.style.setProperty('--cw', M.cw + 'em');
   }
   const cellsEm = (s) => { let w = 0; for (const ch of s) w += (ch === ',' ? M.cw : M.dw); return w; };
 
-  // The biggest size at which the count still fits inside the disc: its bounding box is a rectangle
+  // The biggest size at which the count still fits on the button: its bounding box is a rectangle
   // centred in the circle, so its corner has to stay inside the rim. Sized for where the count is headed.
   function fitNum(s) {
     const ref = s.length >= state.minStr.length ? s : state.minStr;
@@ -985,37 +1077,38 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
     $('num').innerHTML = h;
     fitNum(s);
   }
-  // A one-line readout sized to the width it has (the readout is tracked in by .05em a character, scaled by the face).
+  // A number on the counter: one cell per digit, sized to the width it has. Long numbers get slimmer cells.
   function fitReadout(el, s, maxPx, avail) {
-    el.textContent = s;
-    const em = Math.max(0.4, emWidth(el, s) - 0.05 * FACES[face].trk * s.length);
-    el.style.fontSize = Math.max(34, Math.floor(Math.min(maxPx, avail / em))) + 'px';
+    let h = '', nd = 0, nc = 0;
+    for (const ch of s) { if (ch === ',' || ch === '.') { h += '<b class="c">' + ch + '</b>'; nc++; } else { h += '<b class="d">' + ch + '</b>'; nd++; } }
+    const long = nd > 7;
+    el.classList.toggle('long', long);
+    el.innerHTML = h;
+    const em = nd * (M.dw + (long ? 0.07 : 0.2)) + nc * (M.cw - (long ? 0.08 : 0.06)) + (nd + nc - 1) * (long ? 0.028 : 0.055);
+    el.style.fontSize = Math.max(20, Math.floor(Math.min(maxPx, avail / em))) + 'px';
   }
   // A headline that may wrap between words, sized so its longest word fits.
-  function fitWord(el, text, maxPx, avail, track) {
+  function fitWord(el, text, maxPx, avail) {
     let em = 0.5;
-    for (const w of text.split(/\s+/)) em = Math.max(em, emWidth(el, w) + track * FACES[face].trk * w.length);
-    el.style.fontSize = Math.floor(Math.min(maxPx * FACES[face].dz, avail / em)) + 'px';
+    for (const w of text.split(/\s+/)) em = Math.max(em, emWidth(el, w));
+    el.style.fontSize = Math.floor(Math.min(maxPx, avail / em)) + 'px';
   }
   const vmin = () => Math.min(innerWidth, innerHeight);
+  const slipWidth = () => Math.max(200, ($('slip').clientWidth || 340) - 36);
+  const answerMax = () => Math.min(132, innerWidth * 0.29, innerHeight * 0.2);
   function fitMark() {
-    const el = document.querySelector('.mark');
-    fitWord(el, 'Perfect Timing', Math.max(64, Math.min(innerWidth * 0.3, innerHeight * 0.2, 220)), Math.min(innerWidth - 44, 560), -0.035);
+    fitWord(document.querySelector('.mark'), 'Perfect Timing', Math.max(40, Math.min(innerWidth * 0.2, innerHeight * 0.11, 120)), Math.min(innerWidth - 44, 560));
   }
   function refit() {
     measure(); fitMark();
     if (state.phase === 'counting') { state.lastLen = 0; fitNum(fmt(state.displayed)); }
-    if (state.phase === 'result' && state.current) {
-      const col = $('screen-result').querySelector('.col');
-      fitReadout($('resAnswerNum'), state.current[1].toLocaleString('en-US'), Math.min(150, innerWidth * 0.32), col.clientWidth || 320);
-    }
+    if (state.phase === 'result' && state.current) fitReadout($('resAnswerNum'), state.current[1].toLocaleString('en-US'), answerMax(), slipWidth());
   }
-  // The edge of a pressable thing: the type colour a step darker (or, for black, a step lighter).
+  // The edge of a key: its face colour a step darker, or for a dark face a step lighter.
   function sideOf(hex) {
-    const n = parseInt(hex.slice(1), 16), r = n >> 16 & 255, g = n >> 8 & 255, b = n & 255;
-    if (r + g + b < 60) return '#3c3c3c';
-    const k = 0.66, h = (v) => Math.round(v * k).toString(16).padStart(2, '0');
-    return '#' + h(r) + h(g) + h(b);
+    const n = parseInt(hex.slice(1), 16), c = [n >> 16 & 255, n >> 8 & 255, n & 255];
+    const dark = (c[0] * 299 + c[1] * 587 + c[2] * 114) / 1000 < 80;
+    return '#' + c.map(v => Math.round(dark ? v + (255 - v) * 0.27 : v * 0.7).toString(16).padStart(2, '0')).join('');
   }
 
   // ───────────── game flow ─────────────
@@ -1036,7 +1129,7 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
     const num = $('num');
     num.classList.add('is-label'); num.style.fontSize = ''; num.textContent = 'Start';
     $('giveUp').hidden = true; disarmGiveUp();
-    $('bigBtn').classList.remove('early', 'down');
+    $('well').classList.remove('early'); $('bigBtn').classList.remove('down');
     state.phase = 'ready'; state.lastLen = 0;
     show('round', roundPair());
     if (autoStart) startCount();
@@ -1076,7 +1169,7 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
     cancelAnimationFrame(state.raf);
     clearTimeout(state.earlyTimer);
     $('early').classList.remove('show');
-    $('bigBtn').classList.remove('early');
+    $('well').classList.remove('early');
   }
 
   function onBigTap() {
@@ -1092,7 +1185,7 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
     state.tooEarly++;
     state.lockUntil = now + EARLY_LOCK_MS;
     sound.buzz(); vibrate(60);
-    const b = $('bigBtn'), cap = $('early');
+    const b = $('well'), cap = $('early');
     b.classList.remove('early'); void b.offsetWidth; b.classList.add('early');
     cap.classList.add('show');
     clearTimeout(state.earlyTimer);
@@ -1115,7 +1208,7 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
     sound.dead(); vibrate(120);
     state.phase = 'late';
     const el = $('late'); el.classList.remove('out'); discOrigin(el); el.hidden = false;
-    fitWord(el.querySelector('.word'), 'Too late', Math.max(84, Math.min(vmin() * 0.27, 240)), Math.min(innerWidth - 40, 600), -0.045);
+    fitWord(el.querySelector('.word'), 'Too late', Math.max(72, Math.min(vmin() * 0.3, 240)), Math.min(innerWidth - 40, 600));
     clearTimeout(state.celeTimer);
     state.celeTimer = setTimeout(() => { showResult(false, 'dead', true); fadeOut(el); }, reduceMotion ? 800 : LATE_SHOW_MS);
   }
@@ -1157,12 +1250,12 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
           size(); parts = []; running = true; cancelAnimationFrame(raf);
           const W = innerWidth, H = innerHeight;
           if (level === 2) {
-            const cols = [C.black, C.white, C.pink, C.mint, C.oxblood];
+            const cols = [C.red, C.red, C.ink, C.mustard, C.teal];
             burst(240, x, y, cols, 15, 0);
             burst(100, 0, H, cols, 20, 1); burst(100, W, H, cols, 20, -1);
             setTimeout(() => { if (running) burst(160, W / 2, H * 0.42, cols, 13, 0); }, 380);
           } else {
-            burst(140, x, y, [pair[1], pair[1], C.white], 13, 0);
+            burst(140, x, y, [C.cream, C.cream, C.mustard, C.sky], 13, 0);
           }
           raf = requestAnimationFrame(tick);
         } catch (e) { running = false; }
@@ -1185,7 +1278,7 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
 
   function celebrate() {
     const bull = state.bullseye, el = $('cele');
-    const pair = bull ? BULL : flip(roundPair());                    // a win turns the round inside out; a bullseye is black on orange
+    const pair = bull ? BULL : WIN;                                  // a win lights the table green; a bullseye is a red-and-cream target
     el.style.setProperty('--ground', pair[0]); el.style.setProperty('--fg', pair[1]);
     el.classList.remove('out'); el.classList.toggle('bull', bull);
     $('celeEyebrow').textContent = `Round ${state.round} of ${state.total}`;
@@ -1199,8 +1292,8 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
     const [x, y] = discOrigin(el);
     state.phase = 'cele';
     el.hidden = false;
-    fitWord($('celeTitle'), headline, bull ? Math.max(76, Math.min(vmin() * 0.25, 230)) : Math.max(64, Math.min(vmin() * 0.2, 190)), Math.min(innerWidth - 40, 600), -0.045);
-    fitReadout($('celeNum'), shown, Math.min(120, innerWidth * 0.24), Math.min(innerWidth - 48, 560));
+    fitWord($('celeTitle'), headline, bull ? Math.max(70, Math.min(vmin() * 0.27, 230)) : Math.max(60, Math.min(vmin() * 0.22, 190)), Math.min(innerWidth - 40, 600));
+    fitReadout($('celeNum'), shown, Math.min(110, innerWidth * 0.22), Math.min(innerWidth - 48, 560));
     dots.start(bull ? 2 : 1, pair, x, y);
     state.celeSkipAt = performance.now() + 650;                     // a tap after this skips ahead (slams right after the win don't)
     clearTimeout(state.celeTimer);
@@ -1220,6 +1313,7 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
     state.phase = 'result';
     if (!won) { state.pts = 0; state.bullseye = false; }
     $('resEyebrow').textContent = won ? (state.bullseye ? 'Bullseye · double points' : 'Correct') : (why === 'dead' ? 'Too late' : 'Everyone missed');
+    $('resEyebrow').classList.toggle('red', won && state.bullseye);
     $('resAnswerUnit').textContent = u || '';
     $('resTapped').hidden = !won;
     $('resTappedNum').textContent = fmt(state.displayed);
@@ -1252,9 +1346,8 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
     const last = state.round >= state.total;
     $('nextBtn').textContent = last ? 'Final scores' : 'Next round';
     $('newNextBtn').textContent = $('nextBtn').textContent;
-    show('result', flip(roundPair()), instant);
-    const col = $('screen-result').querySelector('.col');
-    fitReadout($('resAnswerNum'), a.toLocaleString('en-US'), Math.min(150, innerWidth * 0.32), col.clientWidth || 320);
+    show('result', roundPair(), instant);
+    fitReadout($('resAnswerNum'), a.toLocaleString('en-US'), answerMax(), slipWidth());
   }
 
   function takeEmoji() {
@@ -1268,7 +1361,7 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
     renderScores();
     $('newEmoji').textContent = e;
     state.phase = 'newplayer';
-    show('newplayer', flip(roundPair()));
+    show('newplayer', roundPair());
   }
   function advance() { sound.unlock(); if (state.round >= state.total) endGame(); else startRound(); }
 
@@ -1303,7 +1396,8 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
     const parts = [`${state.bullseyes} bullseye${state.bullseyes === 1 ? '' : 's'}`, `${state.tooEarly} too-early tap${state.tooEarly === 1 ? '' : 's'}`];
     const dead = state.dead + state.unclaimed;
     if (dead) parts.push(`${dead} dead round${dead === 1 ? '' : 's'}`);
-    $('endStats').textContent = parts.join(' · ');
+    const stats = $('endStats'); stats.textContent = '';
+    for (const p of parts) { const d = document.createElement('div'); d.textContent = p; stats.appendChild(d); }
     show('end', FINAL);
   }
   function goHome() { state.phase = 'start'; state.round = 0; show('start', HOME); }
@@ -1393,6 +1487,7 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
     big.addEventListener('keydown', (e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); onBigTap(); } });
     big.addEventListener('contextmenu', (e) => e.preventDefault());
     big.addEventListener('touchstart', () => {}, { passive: true });
+    document.addEventListener('touchstart', () => {}, { passive: true });   // lets :active show on iOS, so every key goes down when you press it
 
     $('playBtn').addEventListener('click', newGame);
     $('againBtn').addEventListener('click', newGame);
@@ -1401,7 +1496,7 @@ textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
     for (const id of Object.keys(FACES)) {                               // one row per typeface, each set in its own face
       const f = FACES[id], b = document.createElement('button'); b.className = 'opt'; b.type = 'button'; b.dataset.face = id;
       const tt = document.createElement('span'); tt.className = 't'; tt.textContent = f.name;
-      tt.style.fontFamily = f.display; tt.style.fontWeight = f.wd; tt.style.fontVariationSettings = f.dvs;
+      tt.style.fontFamily = f.v['f-ask']; tt.style.fontWeight = f.v['w-ask']; tt.style.fontStretch = f.v['s-ask'] || '100%';
       const dd = document.createElement('span'); dd.className = 'd'; dd.textContent = f.note;
       b.append(tt, dd); b.addEventListener('click', () => { applyFace(id, true); paintSettings(); });
       $('faceOpts').appendChild(b);

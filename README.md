@@ -15,4 +15,4 @@ The whole game is `index.html`: no build step and no dependencies beyond two Goo
 
 - **Questions** live in the `DEFAULT_DECK` array near the top of the script. Each entry is `[question, answer, unit, note]`; an entry with `{ m: [...], i: [...] }` has a metric and an imperial version. Players can also edit the deck on their own device from Settings → Edit the deck.
 - **Pacing and scoring** are in the `TUNING` block just above the deck: seconds to reach the answer, the bullseye window, the double-the-answer cutoff, and the small/medium/big mix per game.
-- **Colors and fonts** are tokens in the `:root` block at the top of the stylesheet.
+- **The look**: the button is always red. Each round's panel colour and legend colour is a pair in `ROUND_PAIRS` in the script, and the fixed colours (the red, the label tape, the paper slip) are tokens in the `:root` block at the top of the stylesheet. Typefaces are filled in by role in `FACES`; Settings switches between them.
