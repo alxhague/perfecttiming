@@ -140,7 +140,7 @@ p{margin:0}
 #early{position:absolute;top:0;left:50%;z-index:2;pointer-events:none;
   transform:translate(-50%,-70%) rotate(-3deg) scale(.6);opacity:0;transition:transform .28s var(--spring),opacity .1s}
 #early.show{transform:translate(-50%,0) rotate(-3deg) scale(1);opacity:1}
-#giveUp{align-self:center}
+.under{flex:0 0 auto;min-height:42px}
 @keyframes shake{10%,90%{transform:translate(-2px,1px)}20%,80%{transform:translate(4px,-2px)}30%,50%,70%{transform:translate(-7px,3px)}40%,60%{transform:translate(7px,-3px)}}
 
 /* ---------- the review: the machine prints a slip. The answer on a counter, then where you tapped, then the note ---------- */
@@ -261,7 +261,7 @@ textarea:focus-visible{outline:2px solid var(--red);outline-offset:2px}
   #screen-round .scores{grid-column:1;grid-row:1}
   #screen-round .question{grid-column:1;grid-row:2;align-self:center;font-size:calc(var(--z-ask)*clamp(22px,8vh,38px))}
   #screen-round .arena{grid-column:2;grid-row:1/-1;padding-block:0}
-  #screen-round #giveUp{grid-column:1;grid-row:3;justify-self:start}
+  #screen-round .under{grid-column:1;grid-row:3;justify-content:flex-start}
 }
 
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -293,7 +293,7 @@ textarea:focus-visible{outline:2px solid var(--red);outline-offset:2px}
         <div class="tape lg red" id="early" aria-live="assertive">Too early</div>
         <div class="well" id="well"><button class="big" id="bigBtn" type="button" aria-label="Tap when the number reaches the answer"><span class="num is-label" id="num">Start</span></button></div>
       </div>
-      <button class="pill ghost small" id="giveUp" type="button" hidden>Everyone missed</button>
+      <div class="row under"><button class="pill ghost small" id="seenBtn" type="button">Seen it</button><button class="pill ghost small" id="giveUp" type="button" hidden>Everyone missed</button></div>
     </div>
   </section>
 
@@ -911,7 +911,7 @@ textarea:focus-visible{outline:2px solid var(--red);outline-offset:2px}
   }
 
   // ───────────── state ─────────────
-  const state = {
+  const state = { seen: [],
     phase: 'start', round: 0, total: ROUNDS, questions: [], players: [], pool: [],
     tooEarly: 0, unclaimed: 0, dead: 0, bullseyes: 0, current: null, pts: 1, after: 0, bullseye: false, celeTimer: 0, celeSkipAt: 0,
     paused: false, pausedPhase: '', pausedAt: 0, quitTimer: 0,
@@ -1125,6 +1125,7 @@ textarea:focus-visible{outline:2px solid var(--red);outline-offset:2px}
   function newGame() {
     state.questions = pickQuestions();
     state.total = state.questions.length;
+    state.seen = [];
     state.round = 0; state.players = []; state.pool = shuffle(EMOJI); state.tooEarly = 0; state.unclaimed = 0; state.dead = 0; state.bullseyes = 0;
     sound.unlock();
     renderScores();
@@ -1132,16 +1133,37 @@ textarea:focus-visible{outline:2px solid var(--red);outline-offset:2px}
   }
 
   function startRound() {
-    stopCount();
     state.round++;
+    setQuestion();
+    show('round', roundPair());
+    if (autoStart) startCount();
+  }
+  // Put this round's question up with the button back at rest.
+  function setQuestion() {
+    stopCount();
     state.current = state.questions[state.round - 1];
     $('qText').textContent = state.current[0];
     const num = $('num');
     num.classList.add('is-label'); num.style.fontSize = ''; num.textContent = 'Start';
     $('giveUp').hidden = true; disarmGiveUp();
+    $('early').classList.remove('show');
     $('well').classList.remove('early'); $('bigBtn').classList.remove('down');
     state.phase = 'ready'; state.lastLen = 0;
-    show('round', roundPair());
+    $('seenBtn').hidden = !spare().length;
+  }
+  // "Seen it": swap this round's question for a fresh one of the same size and start the round over. Nobody scores, nothing counts.
+  const tierOf = (d) => d[1] <= SMALL_MAX ? 0 : d[1] < 10000 ? 1 : 2;
+  function spare() {
+    const used = new Set(state.questions.map(q => q[0]));
+    return deck.map(variant).filter(d => !used.has(d[0]) && !state.seen.includes(d[0]));
+  }
+  function seenIt() {
+    if (state.phase !== 'ready' && state.phase !== 'counting') return;
+    const all = spare(); if (!all.length) return;
+    const same = all.filter(d => tierOf(d) === tierOf(state.current)), pool = same.length ? same : all;
+    state.seen.push(state.current[0]);
+    state.questions[state.round - 1] = pool[Math.floor(Math.random() * pool.length)];
+    sound.unlock(); setQuestion();
     if (autoStart) startCount();
   }
 
@@ -1525,6 +1547,7 @@ textarea:focus-visible{outline:2px solid var(--red);outline-offset:2px}
     $('nextBtn').addEventListener('click', advance);
     $('newNextBtn').addEventListener('click', advance);
     $('giveUp').addEventListener('click', armGiveUp);
+    $('seenBtn').addEventListener('click', seenIt);
     $('cele').addEventListener('pointerdown', () => { if (state.phase === 'cele' && performance.now() >= state.celeSkipAt) endCelebration(); });
     $('pauseBtn').addEventListener('click', pauseGame);
     $('resumeBtn').addEventListener('click', resumeGame);
