@@ -161,16 +161,24 @@ p{margin:0}
 .tapline{font-size:calc(21px*var(--z-ask));line-height:1.2}
 #resVerdict{font-size:calc(18px*var(--z-ask))}
 .note{font-size:calc(14.5px*var(--z-text));line-height:1.55;text-wrap:pretty}
-.who{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-.who .pill{padding:0 18px}
-.pbtn{width:64px;height:64px;padding:0;margin:0 0 5px;border:0;border-radius:50%;display:grid;place-items:center;font-size:34px;line-height:1;cursor:pointer;touch-action:manipulation;
-  background:var(--fg);box-shadow:0 5px 0 var(--side);transition:transform .07s ease,box-shadow .07s ease;-webkit-tap-highlight-color:transparent}
+/* the bottom half of the review: the scoreboard, in the round's colours turned inside out. Faces with their scores; tap the one who got it */
+#screen-result>.col{flex:1 0 auto;gap:20px}
+.bench{--ground:var(--inv-ground);--fg:var(--inv-fg);--side:var(--inv-side);flex:1 0 auto;display:flex;flex-direction:column;gap:16px;padding:18px 18px 20px;border-radius:20px;background:var(--ground);color:var(--fg)}
+.bench>.pill{align-self:flex-start;margin-top:auto}
+.who{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start}
+.who .pill{height:92px;padding:0 18px;border-radius:16px}
+.pbtn{width:72px;height:92px;padding:6px 0 0;margin:0 0 5px;border:0;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;touch-action:manipulation;
+  background:var(--fg);color:var(--ground);box-shadow:0 5px 0 var(--side);transition:transform .07s ease,box-shadow .07s ease;-webkit-tap-highlight-color:transparent}
+.pbtn .e{font-size:40px;line-height:1}
+.pbtn b{font-family:var(--f-num);font-weight:var(--w-num);font-stretch:var(--s-num);font-size:24px;line-height:1}
 .pbtn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--side)}
-.notecard{display:flex;align-items:center;gap:14px;padding:14px 18px 14px 14px;border-radius:12px;background:rgba(128,128,128,.25);background:color-mix(in srgb,var(--fg) 13%,transparent)}
-.notecard .e{font-size:50px;line-height:1}
-.screen>.col>.pill{align-self:flex-start}
+.pbtn:disabled{cursor:default;transform:none;background:transparent;color:var(--fg);box-shadow:inset 0 0 0 2px var(--fg);margin-bottom:0}
+/* handing someone their avatar */
+.plate{display:flex;align-items:center;gap:16px;animation:enter .45s var(--spring) both}
+.plate .e{font-size:clamp(84px,26vw,120px);line-height:1;flex:0 0 auto}
+.plate .t{font-family:var(--f-ask);font-weight:var(--w-ask);font-stretch:var(--s-ask);font-size:calc(var(--z-ask)*clamp(22px,6.4vw,30px));line-height:1.1;text-wrap:balance}
+.plate .d{font-size:calc(13px*var(--z-text));line-height:1.5;opacity:.8;margin-top:6px}
 .screen>.col.center>.pill{align-self:center}
-.hero{font-size:clamp(110px,36vmin,180px);line-height:1}
 
 /* ---------- final scores ---------- */
 #screen-end>.col{margin-block:auto}
@@ -300,7 +308,6 @@ textarea:focus-visible{outline:2px solid var(--red);outline-offset:2px}
   <!-- REVIEW -->
   <section class="screen" id="screen-result" hidden>
     <div class="col">
-      <div class="scores" hidden></div>
       <div class="slip" id="slip">
         <div class="tape" id="resEyebrow">Correct</div>
         <div class="answer"><span class="readout" id="resAnswerNum">21</span><span class="eyebrow" id="resAnswerUnit">seconds</span></div>
@@ -308,22 +315,15 @@ textarea:focus-visible{outline:2px solid var(--red);outline-offset:2px}
         <p class="tapline" id="resVerdict" hidden></p>
         <p class="note" id="resNote"></p>
       </div>
-      <div class="block" id="whoBlock">
+      <div class="bench">
         <div class="eyebrow" id="whoLabel">Who got it?</div>
         <div class="who" id="who"></div>
+        <div class="plate" id="plate" hidden>
+          <span class="e" id="plateEmoji">🦊</span>
+          <div><div class="t" id="plateTitle">Whoever got that, this is you.</div><div class="d">Your avatar for the game. Next time you win a round, tap your own face.</div></div>
+        </div>
+        <button class="pill" id="nextBtn" type="button" hidden>Next round</button>
       </div>
-      <button class="pill" id="nextBtn" type="button" hidden>Next round</button>
-    </div>
-  </section>
-
-  <!-- NEW PLAYER -->
-  <section class="screen" id="screen-newplayer" hidden>
-    <div class="col center">
-      <div class="tape" id="newTape">New player</div>
-      <div class="hero" id="newEmoji">🐸</div>
-      <div class="title2" id="newTitle">You're this now.</div>
-      <p class="line dim" id="newLine" style="max-width:26ch">Point's on the board. Next time you win a round, tap your own face.</p>
-      <button class="pill" id="newNextBtn" type="button">Next round</button>
     </div>
   </section>
 
@@ -932,6 +932,7 @@ textarea:focus-visible{outline:2px solid var(--red);outline-offset:2px}
     document.querySelectorAll('.screen').forEach(s => { if (s !== next && s !== prev) { s.hidden = true; s.classList.remove('wipe'); s.style.zIndex = ''; } });
     clearTimeout(wipeTimer);
     next.style.setProperty('--ground', pair[0]); next.style.setProperty('--fg', pair[1]); next.style.setProperty('--side', sideOf(pair[1]));
+    next.style.setProperty('--inv-ground', pair[1]); next.style.setProperty('--inv-fg', pair[0]); next.style.setProperty('--inv-side', sideOf(pair[0]));
     next.classList.remove('wipe'); prev.classList.remove('wipe');
     next.hidden = false; next.scrollTop = 0;
     if (prev !== next) {
@@ -945,7 +946,7 @@ textarea:focus-visible{outline:2px solid var(--red);outline-offset:2px}
     }
     cur = name;
     setPair(pair);
-    const inGame = name === 'round' || name === 'result' || name === 'newplayer';
+    const inGame = name === 'round' || name === 'result';
     $('corner').textContent = inGame ? `Round ${state.round}/${state.total}` : (name === 'end' ? 'Final' : '');
     $('pauseBtn').hidden = !inGame;
     $('settingsBtn').hidden = name !== 'start';
@@ -1348,29 +1349,30 @@ textarea:focus-visible{outline:2px solid var(--red);outline-offset:2px}
     $('resVerdict').hidden = won || why !== 'dead';
     $('resVerdict').textContent = `The count ran to ${fmt(state.displayed)} before anyone tapped. Nobody scores.`;
     $('resNote').textContent = note || ''; $('resNote').hidden = !note;
-    const who = $('who'); who.textContent = '';
-    $('whoBlock').hidden = true; $('nextBtn').hidden = true; state.first = false;
-    if (!won) {
-      $('nextBtn').hidden = false;
-    } else if (state.players.length === 0) {
-      state.first = true; $('nextBtn').hidden = false;      // nobody has a face yet: the next screen hands the winner one
+    const who = $('who'); who.textContent = ''; who.hidden = false;
+    $('plate').hidden = true; $('nextBtn').hidden = true;
+    if (won && state.players.length === 0) {
+      handAvatar('First point', 'Whoever got that, this is you.');      // nobody has a face yet, so the winner gets one here
     } else {
-      $('whoBlock').hidden = false;
-      $('whoLabel').textContent = state.pts === 2 ? 'Who got it? Two points.' : 'Who got it?';
+      // every face with its score; after a win they are the buttons that take the points
+      $('whoLabel').textContent = won ? (state.pts === 2 ? 'Who got it? Two points.' : 'Who got it?') : (state.players.length ? 'Scores' : 'No points yet');
       state.players.forEach((p, i) => {
-        const b = document.createElement('button'); b.className = 'pbtn'; b.type = 'button';
-        b.textContent = p.e; b.setAttribute('aria-label', 'Player ' + p.e);
+        const b = document.createElement('button'); b.className = 'pbtn'; b.type = 'button'; b.disabled = !won;
+        const e = document.createElement('span'); e.className = 'e'; e.textContent = p.e;
+        const n = document.createElement('b'); n.textContent = p.score;
+        b.append(e, n); b.setAttribute('aria-label', 'Player ' + p.e + ', ' + p.score);
         b.addEventListener('click', () => award(i));
         who.appendChild(b);
       });
-      const nb = document.createElement('button'); nb.className = 'pill ghost'; nb.type = 'button'; nb.textContent = 'Someone new';
-      nb.addEventListener('click', awardNew);
-      who.appendChild(nb);
+      who.hidden = !who.children.length && !won;
+      if (won) {
+        const nb = document.createElement('button'); nb.className = 'pill ghost'; nb.type = 'button'; nb.textContent = 'Someone new';
+        nb.addEventListener('click', () => handAvatar('New player', "You're this now."));
+        who.appendChild(nb);
+      } else $('nextBtn').hidden = false;
     }
     const last = state.round >= state.total;
     $('nextBtn').textContent = last ? 'Final scores' : 'Next round';
-    $('newNextBtn').textContent = $('nextBtn').textContent;
-    if (state.first) $('nextBtn').textContent = 'Next';
     show('result', roundPair(), instant);
     fitReadout($('resAnswerNum'), a.toLocaleString('en-US'), answerMax(), slipWidth());
   }
@@ -1380,17 +1382,13 @@ textarea:focus-visible{outline:2px solid var(--red);outline-offset:2px}
     return state.pool.shift();
   }
   function award(i) { state.players[i].score += state.pts; renderScores(); advance(); }
-  function awardNew() {
+  // A new face goes to whoever just won, in the scoreboard half of the review.
+  function handAvatar(label, title) {
     const e = takeEmoji();
     state.players.push({ e, score: state.pts });
     renderScores();
-    $('newEmoji').textContent = e;
-    const first = state.players.length === 1;
-    $('newTape').textContent = first ? 'First point' : 'New player';
-    $('newTitle').textContent = first ? 'Whoever got that, this is you.' : "You're this now.";
-    $('newLine').textContent = first ? "Here's your avatar for the game. Next time you win a round, tap your own face." : "Point's on the board. Next time you win a round, tap your own face.";
-    state.phase = 'newplayer';
-    show('newplayer', roundPair());
+    $('whoLabel').textContent = label; $('plateEmoji').textContent = e; $('plateTitle').textContent = title;
+    $('who').hidden = true; $('plate').hidden = false; $('nextBtn').hidden = false;
   }
   function advance() { sound.unlock(); if (state.round >= state.total) endGame(); else startRound(); }
 
@@ -1468,7 +1466,7 @@ textarea:focus-visible{outline:2px solid var(--red);outline-offset:2px}
   // ───────────── pause / quit ─────────────
   function pauseGame() {
     const p = state.phase;
-    if (state.paused || !(p === 'ready' || p === 'counting' || p === 'result' || p === 'newplayer')) return;
+    if (state.paused || !(p === 'ready' || p === 'counting' || p === 'result')) return;
     state.paused = true; state.pausedPhase = p; state.pausedAt = performance.now();
     if (p === 'counting') { state.running = false; cancelAnimationFrame(state.raf); }   // freeze the clock where it is
     disarmQuit();
@@ -1541,8 +1539,7 @@ textarea:focus-visible{outline:2px solid var(--red);outline-offset:2px}
     $('editBtn').addEventListener('click', openDeck);
     $('saveDeckBtn').addEventListener('click', saveDeck);
     $('resetDeckBtn').addEventListener('click', resetDeck);
-    $('nextBtn').addEventListener('click', () => { if (state.first) { state.first = false; awardNew(); } else advance(); });
-    $('newNextBtn').addEventListener('click', advance);
+    $('nextBtn').addEventListener('click', advance);
     $('giveUp').addEventListener('click', armGiveUp);
     $('seenBtn').addEventListener('click', seenIt);
     $('cele').addEventListener('pointerdown', () => { if (state.phase === 'cele' && performance.now() >= state.celeSkipAt) endCelebration(); });
