@@ -312,10 +312,6 @@ textarea:focus-visible{outline:2px solid var(--red);outline-offset:2px}
         <div class="eyebrow" id="whoLabel">Who got it?</div>
         <div class="who" id="who"></div>
       </div>
-      <div class="notecard" id="firstCard" hidden>
-        <span class="e" id="firstEmoji">🦊</span>
-        <p class="line">First on the board. Whoever tapped, that's you from now on. Pick yourself from the lineup next time.</p>
-      </div>
       <button class="pill" id="nextBtn" type="button" hidden>Next round</button>
     </div>
   </section>
@@ -323,10 +319,10 @@ textarea:focus-visible{outline:2px solid var(--red);outline-offset:2px}
   <!-- NEW PLAYER -->
   <section class="screen" id="screen-newplayer" hidden>
     <div class="col center">
-      <div class="tape">New player</div>
+      <div class="tape" id="newTape">New player</div>
       <div class="hero" id="newEmoji">🐸</div>
-      <div class="title2">You're this now.</div>
-      <p class="line dim" style="max-width:26ch">Point's on the board. Next time you win a round, tap your own face.</p>
+      <div class="title2" id="newTitle">You're this now.</div>
+      <p class="line dim" id="newLine" style="max-width:26ch">Point's on the board. Next time you win a round, tap your own face.</p>
       <button class="pill" id="newNextBtn" type="button">Next round</button>
     </div>
   </section>
@@ -1353,15 +1349,11 @@ textarea:focus-visible{outline:2px solid var(--red);outline-offset:2px}
     $('resVerdict').textContent = `The count ran to ${fmt(state.displayed)} before anyone tapped. Nobody scores.`;
     $('resNote').textContent = note || ''; $('resNote').hidden = !note;
     const who = $('who'); who.textContent = '';
-    $('whoBlock').hidden = true; $('firstCard').hidden = true; $('nextBtn').hidden = true;
+    $('whoBlock').hidden = true; $('nextBtn').hidden = true; state.first = false;
     if (!won) {
       $('nextBtn').hidden = false;
     } else if (state.players.length === 0) {
-      const e = takeEmoji();
-      state.players.push({ e, score: state.pts });
-      $('firstEmoji').textContent = e;
-      $('firstCard').hidden = false; $('nextBtn').hidden = false;
-      renderScores();
+      state.first = true; $('nextBtn').hidden = false;      // nobody has a face yet: the next screen hands the winner one
     } else {
       $('whoBlock').hidden = false;
       $('whoLabel').textContent = state.pts === 2 ? 'Who got it? Two points.' : 'Who got it?';
@@ -1378,6 +1370,7 @@ textarea:focus-visible{outline:2px solid var(--red);outline-offset:2px}
     const last = state.round >= state.total;
     $('nextBtn').textContent = last ? 'Final scores' : 'Next round';
     $('newNextBtn').textContent = $('nextBtn').textContent;
+    if (state.first) $('nextBtn').textContent = 'Next';
     show('result', roundPair(), instant);
     fitReadout($('resAnswerNum'), a.toLocaleString('en-US'), answerMax(), slipWidth());
   }
@@ -1392,6 +1385,10 @@ textarea:focus-visible{outline:2px solid var(--red);outline-offset:2px}
     state.players.push({ e, score: state.pts });
     renderScores();
     $('newEmoji').textContent = e;
+    const first = state.players.length === 1;
+    $('newTape').textContent = first ? 'First point' : 'New player';
+    $('newTitle').textContent = first ? 'Whoever got that, this is you.' : "You're this now.";
+    $('newLine').textContent = first ? "Here's your avatar for the game. Next time you win a round, tap your own face." : "Point's on the board. Next time you win a round, tap your own face.";
     state.phase = 'newplayer';
     show('newplayer', roundPair());
   }
@@ -1544,7 +1541,7 @@ textarea:focus-visible{outline:2px solid var(--red);outline-offset:2px}
     $('editBtn').addEventListener('click', openDeck);
     $('saveDeckBtn').addEventListener('click', saveDeck);
     $('resetDeckBtn').addEventListener('click', resetDeck);
-    $('nextBtn').addEventListener('click', advance);
+    $('nextBtn').addEventListener('click', () => { if (state.first) { state.first = false; awardNew(); } else advance(); });
     $('newNextBtn').addEventListener('click', advance);
     $('giveUp').addEventListener('click', armGiveUp);
     $('seenBtn').addEventListener('click', seenIt);
