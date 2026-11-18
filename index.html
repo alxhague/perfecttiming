@@ -152,6 +152,7 @@ p{margin:0}
 .slip>.tape{position:absolute;top:-10px;left:14px;transform:rotate(-2deg)}
 @keyframes feed{from{transform:translateY(26px);opacity:0}}
 .answer{display:flex;flex-direction:column;align-items:flex-start;gap:9px}
+.answer .eyebrow:empty{display:none}
 .readout{display:flex;align-items:baseline;gap:.055em;white-space:nowrap;font-size:96px;line-height:1}
 .readout b.d{width:calc(var(--dw) + .2em);padding:.1em 0 .07em;border-radius:.09em;background:var(--fg);color:var(--ground)}
 .readout b.c{width:var(--cw);margin-inline:-.03em}
@@ -792,7 +793,26 @@ textarea:focus-visible{outline:2px solid var(--red);outline-offset:2px}
     ['How many heads in a row before the odds of the streak pass a million to one?', 20, 'heads', 'Twenty in a row is 1 in 1,048,576.'],
     ['How many times would you have to fold a sheet of paper in half for it to reach the Moon?', 42, 'folds', 'Doubling is fast: 42 folds of an ordinary sheet comes to about 440,000 km. Nobody has managed more than 12.'],
     ['How many years does it take for half of a sample of carbon-14 to decay?', 5730, 'years', 'Which is why carbon dating runs out of anything to measure after about 50,000 years.'],
-    ['At 7 percent interest a year, how many years until your money has doubled?', 10, 'years', 'A little over ten. Divide 72 by the interest rate and you get the doubling time, near enough.']
+    ['At 7 percent interest a year, how many years until your money has doubled?', 10, 'years', 'A little over ten. Divide 72 by the interest rate and you get the doubling time, near enough.'],
+    ['What percent of the Earth\'s surface is covered by water?', 71, 'percent', 'About 71 percent, and nearly all of it is salt water.'],
+    ['What percent of people are left-handed?', 10, 'percent', 'About one in ten, and it has held steady for thousands of years.'],
+    ['How old was Mozart when he died?', 35, 'years old', 'Thirty-five, with more than 600 works behind him.'],
+    ['How old was Colonel Sanders when he sold his first KFC franchise?', 62, 'years old', 'He was 62, in 1952, after his roadside restaurant had already failed.'],
+    ['Which number president was Abraham Lincoln?', 16, 'president no.', 'The sixteenth.'],
+    ['What is the atomic number of gold?', 79, 'protons', 'Seventy-nine protons. One more and it would be mercury.'],
+    ['How many colored squares are on a Rubik\'s Cube?', 54, 'squares', 'Nine on each of six faces.'],
+    ['How many black keys are on a piano?', 36, 'keys', 'Thirty-six black and 52 white.'],
+    ['How many letter tiles come in a Scrabble set?', 100, 'tiles', 'A hundred, counting the two blanks. Twelve of them are E.'],
+    ['How many colored dots are on a Twister mat?', 24, 'dots', 'Four rows of six: green, yellow, blue and red.'],
+    ['How many months is an elephant pregnant?', 22, 'months', 'Nearly two years, the longest pregnancy of any mammal.'],
+    { m: ['How fast can a cheetah run, in kilometers per hour?', 112, 'km/h', 'About 112 km/h, but only for a few hundred meters before it overheats.'],
+      i: ['How fast can a cheetah run, in miles per hour?', 70, 'mph', 'About 70 mph, but only for a few hundred yards before it overheats.'] },
+    ['In a famous 1981 study, what percent of American drivers rated themselves better than average?', 93, 'percent', 'Ninety-three percent. At most half of them can have been right.'],
+    ['In a 2017 survey, what percent of American adults said chocolate milk comes from brown cows?', 7, 'percent', 'Seven percent, which works out to more than 16 million people.'],
+    ['How many seconds are Oscar winners given for their acceptance speech?', 45, 'seconds', 'Forty-five seconds, then the orchestra starts.'],
+    ['What is the highest possible break in snooker?', 147, 'points', 'Fifteen reds, each followed by the black, then all six colors.'],
+    ['What year did the Berlin Wall come down?', 1989, '', 'November 9, 1989.'],
+    ['What year was the first text message sent?', 1992, '', 'December 3, 1992. It said "Merry Christmas".']
   ];
 
   const EMOJI = ['🦊','🐸','🐙','🦄','🐢','🦩','🐝','🦕','🍄','🌵','🎃','👻','🤖','👽','🐧','🦔','🥑','🍕','🌈','🦋','🐳','🦀','🍩','🚀'];
@@ -808,7 +828,10 @@ textarea:focus-visible{outline:2px solid var(--red);outline-offset:2px}
 
   // ───────────── helpers ─────────────
   const $ = (id) => document.getElementById(id);
-  const fmt = (n) => Math.floor(n).toLocaleString('en-US');
+  // A year is a number you don't put a comma in: "What year…" questions count 1987, not 1,987.
+  let plainNum = false;
+  const num = (n) => plainNum ? String(n) : n.toLocaleString('en-US');
+  const fmt = (n) => num(Math.floor(n));
   const shuffle = (arr) => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const store = {
     get(k, fallback) { try { const v = localStorage.getItem(k); return v === null ? fallback : JSON.parse(v); } catch (e) { return fallback; } },
@@ -1121,7 +1144,7 @@ textarea:focus-visible{outline:2px solid var(--red);outline-offset:2px}
   function refit() {
     measure(); fitMark();
     if (state.phase === 'counting') { state.lastLen = 0; fitNum(fmt(state.displayed)); }
-    if (state.phase === 'result' && state.current) fitReadout($('resAnswerNum'), state.current[1].toLocaleString('en-US'), answerMax(), slipWidth());
+    if (state.phase === 'result' && state.current) fitReadout($('resAnswerNum'), num(state.current[1]), answerMax(), slipWidth());
   }
   // The edge of a key: its face colour a step darker, or for a dark face a step lighter.
   function sideOf(hex) {
@@ -1151,6 +1174,7 @@ textarea:focus-visible{outline:2px solid var(--red);outline-offset:2px}
   function setQuestion() {
     stopCount();
     state.current = state.questions[state.round - 1];
+    plainNum = /^(what|which|in what|in which) year\b/i.test(state.current[0]);
     $('qText').textContent = state.current[0];
     const num = $('num');
     num.classList.add('is-label'); num.style.fontSize = ''; num.textContent = 'Start';
@@ -1325,7 +1349,7 @@ textarea:focus-visible{outline:2px solid var(--red);outline-offset:2px}
     $('celeEyebrow').textContent = `Round ${state.round} of ${state.total}`;
     const headline = bull ? 'Bullseye!' : WIN_LINES[Math.floor(Math.random() * WIN_LINES.length)];
     $('celeTitle').textContent = headline;
-    const shown = bull ? state.current[1].toLocaleString('en-US') : fmt(state.displayed);   // a bullseye shows the real answer, a plain win the number you hit
+    const shown = bull ? num(state.current[1]) : fmt(state.displayed);   // a bullseye shows the real answer, a plain win the number you hit
     $('celeUnit').textContent = state.current[2] || '';
     $('celeChip').hidden = !bull;
     $('celeSub').hidden = bull;
@@ -1386,7 +1410,7 @@ textarea:focus-visible{outline:2px solid var(--red);outline-offset:2px}
     const last = state.round >= state.total;
     $('nextBtn').textContent = last ? 'Final scores' : 'Next round';
     show('result', roundPair(), instant);
-    fitReadout($('resAnswerNum'), a.toLocaleString('en-US'), answerMax(), slipWidth());
+    fitReadout($('resAnswerNum'), num(a), answerMax(), slipWidth());
   }
 
   function takeEmoji() {
